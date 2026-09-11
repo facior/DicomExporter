@@ -77,9 +77,11 @@ from .widgets import (
     ScrollableFrame,
     Tooltip,
     create_root,
+    crossfade,
     ellipsize,
     enable_high_dpi,
     link_label,
+    optimize_theme_switch,
     reset_label_colors,
     rounded_rect,
     set_enabled,
@@ -212,6 +214,7 @@ class App:
         self._navigating = False
         self._keep_view = False
         self._applying_profile = False
+        self._styles_ready = False
         self._window_drag_origin: tuple[float, float, float] | None = None
         self.available_release: Release | None = None
 
@@ -235,6 +238,7 @@ class App:
         self.palette = PALETTES["dark" if self.dark_var.get() else "light"]
         if sv_ttk is not None:
             sv_ttk.set_theme("dark" if self.dark_var.get() else "light", root)
+            optimize_theme_switch(root)
         self.fonts = setup_fonts(root, self.scale)
         self.icons = IconFactory(root, self.scale)
         self._set_app_icon()
@@ -1008,7 +1012,7 @@ class App:
     # ------------------------------------------------------------------ motyw i język
 
     def _toggle_theme(self) -> None:
-        self._apply_theme()
+        crossfade(self.root, self._apply_theme)
         self._save_settings()
 
     def _apply_theme(self, refresh_title_bar: bool = True) -> None:
@@ -1016,43 +1020,66 @@ class App:
         self.palette = PALETTES["dark" if dark else "light"]
         if sv_ttk is not None:
             sv_ttk.set_theme("dark" if dark else "light", self.root)
-        self._configure_styles()
+        if sv_ttk is None or not self._styles_ready:
+            self._configure_styles()
         self._apply_custom_colors()
-        # Motyw przemalowuje klasyczne widżety Tk po zmianie - kolory własne nakładamy ponownie.
-        self.root.after(60, self._apply_custom_colors)
+        # Tk przelicza okno po zmianie motywu dopiero w czasie bezczynności, a paleta motywu nadpisuje wtedy
+        # kolory etykiet i płócien. Wymuszamy to od razu – jedno przeliczenie obejmuje wszystkie powyższe
+        # zmiany – i przywracamy własne kolory, co już nie wymaga ponownego przeliczania układu.
+        self.root.update_idletasks()
+        self._restore_palette_colors()
         if refresh_title_bar:
             set_title_bar_theme(self.root, dark, refresh=True)
 
     def _configure_styles(self) -> None:
-        palette = self.palette
+        """Style aplikacji. Z motywem Sun Valley ustawiane raz, od razu dla obu wariantów – każda zmiana stylu
+        bieżącego motywu przelicza całe okno, więc przy przełączaniu nie zmieniamy już żadnego stylu."""
         style = ttk.Style(self.root)
         body = tkfont.Font(root=self.root, name="SunValleyBodyFont", exists=True)
-        style.configure("Treeview", rowheight=body.metrics("linespace") + self.px(12))
-        style.configure("Title.TLabel", font="SunValleySubtitleFont", foreground=palette["fg"])
-        style.configure("Section.TLabel", font="SunValleyBodyStrongFont", foreground=palette["fg"])
-        style.configure("Value.TLabel", font="SunValleyBodyFont", foreground=palette["fg"])
-        style.configure("Caption.TLabel", font="SunValleyCaptionFont", foreground=palette["muted"])
-        style.configure("Link.TLabel", font="SunValleyBodyFont", foreground=palette["accent"])
-        style.configure("CaptionLink.TLabel", font="SunValleyCaptionFont", foreground=palette["accent"])
-        style.configure("Error.TLabel", font="SunValleyCaptionFont", foreground=palette["error"])
-        style.configure("StatOk.TLabel", font="DicomExporterStatFont", foreground=palette["success"])
-        style.configure("StatError.TLabel", font="DicomExporterStatFont", foreground=palette["error"])
-        style.configure("StatMuted.TLabel", font="DicomExporterStatFont", foreground=palette["muted"])
+        variants = PALETTES if sv_ttk is not None else {None: self.palette}
+        for variant, palette in variants.items():
+            settings = {
+                "Treeview": {"rowheight": body.metrics("linespace") + self.px(12)},
+                "Title.TLabel": {"font": "SunValleySubtitleFont", "foreground": palette["fg"]},
+                "Section.TLabel": {"font": "SunValleyBodyStrongFont", "foreground": palette["fg"]},
+                "Value.TLabel": {"font": "SunValleyBodyFont", "foreground": palette["fg"]},
+                "Caption.TLabel": {"font": "SunValleyCaptionFont", "foreground": palette["muted"]},
+                "Link.TLabel": {"font": "SunValleyBodyFont", "foreground": palette["accent"]},
+                "CaptionLink.TLabel": {"font": "SunValleyCaptionFont", "foreground": palette["accent"]},
+                "Error.TLabel": {"font": "SunValleyCaptionFont", "foreground": palette["error"]},
+                "StatOk.TLabel": {"font": "DicomExporterStatFont", "foreground": palette["success"]},
+                "StatError.TLabel": {"font": "DicomExporterStatFont", "foreground": palette["error"]},
+                "StatMuted.TLabel": {"font": "DicomExporterStatFont", "foreground": palette["muted"]},
+            }
+            if variant is None:
+                for name, options in settings.items():
+                    style.configure(name, **options)
+            else:
+                style.theme_settings(
+                    f"sun-valley-{variant}", {name: {"configure": options} for name, options in settings.items()}
+                )
+        self._styles_ready = sv_ttk is not None
 
     def _apply_custom_colors(self) -> None:
         if not self._ui_ready:
             return
         palette = self.palette
-        reset_label_colors(self.root)
-        self.drop_zone.configure(background=palette["bg"])
-        self.zoom.canvas.configure(background=PREVIEW_BG)
-        self.export_scroll.canvas.configure(background=palette["bg"])
         self.tree.tag_configure("ok", foreground=palette["success"])
         self.tree.tag_configure("error", foreground=palette["error"])
         self.tree.tag_configure("muted", foreground=palette["muted"])
         self._apply_icons()
         self._draw_drop_zone()
         self._update_controls()
+
+    def _restore_palette_colors(self) -> None:
+        """Paleta motywu (tk_setPalette) wpisuje kolory wprost do etykiet ttk i płócien – przywracamy własne."""
+        if not self._ui_ready:
+            return
+        reset_label_colors(self.root)
+        self.drop_zone.configure(background=self.palette["bg"])
+        self.zoom.canvas.configure(background=PREVIEW_BG)
+        self.export_scroll.canvas.configure(background=self.palette["bg"])
+        self._apply_quality_colors()
         self._update_examples()
 
     def _apply_icons(self) -> None:
@@ -1146,10 +1173,8 @@ class App:
             set_enabled(radio, idle)
         for radio in self.depth_radios:
             set_enabled(radio, idle and fmt in HIGH_BIT_DEPTH_FORMATS)
-        quality = idle and fmt in QUALITY_FORMATS
-        set_enabled(self.quality_scale, quality)
-        for label in (self.quality_caption, self.quality_value):
-            label.configure(foreground="" if quality else self.palette["disabled"])
+        set_enabled(self.quality_scale, idle and fmt in QUALITY_FORMATS)
+        self._apply_quality_colors()
         if export in (EXPORT_GIF, EXPORT_MP4):
             self.fps_row.grid()
         else:
@@ -1177,6 +1202,11 @@ class App:
             set_enabled(widget, total > 1)
         set_enabled(self.window_file_btn, self.preview_window is not None)
         set_enabled(self.mask_clear_btn, bool(self.masks))
+
+    def _apply_quality_colors(self) -> None:
+        quality = not self.converting and self.format_var.get() in QUALITY_FORMATS
+        for label in (self.quality_caption, self.quality_value):
+            label.configure(foreground="" if quality else self.palette["disabled"])
 
     def _on_settings_changed(self) -> None:
         self._update_controls()

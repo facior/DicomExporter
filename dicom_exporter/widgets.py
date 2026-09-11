@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 from tkinter import font as tkfont
 
-from PIL import Image, ImageDraw, ImageFont, ImageTk
+from PIL import Image, ImageDraw, ImageFont, ImageGrab, ImageTk
 
 try:
     import sv_ttk
@@ -183,19 +184,178 @@ def set_title_bar_theme(window: tk.Tk | tk.Toplevel, dark: bool, refresh: bool =
         return
     try:
         import ctypes
+        from ctypes import wintypes
 
         window.update_idletasks()
-        hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
+        user32 = ctypes.windll.user32
+        hwnd = wintypes.HWND(user32.GetParent(window.winfo_id()))
         value = ctypes.c_int(1 if dark else 0)
         for attribute in (20, 19):  # DWMWA_USE_IMMERSIVE_DARK_MODE (nowsze i starsze kompilacje)
             if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, attribute, ctypes.byref(value), ctypes.sizeof(value)) == 0:
                 break
+        if refresh:
+            # Windows 10 przerysowuje pasek tytułu dopiero przy zmianie aktywności okna – symulujemy ją
+            # (dawniej: chwilowa zmiana rozmiaru okna, która przeliczała cały układ i powodowała mignięcie).
+            active = user32.GetForegroundWindow() == hwnd.value
+            user32.SendMessageW(hwnd, 0x0086, int(not active), 0)  # WM_NCACTIVATE
+            user32.SendMessageW(hwnd, 0x0086, int(active), 0)
     except (AttributeError, OSError):
         return
-    if refresh and window.state() == "normal":  # wymusza odświeżenie paska tytułu
-        width, height = window.winfo_width(), window.winfo_height()
-        window.geometry(f"{width + 1}x{height}")
-        window.after(20, lambda: window.geometry(f"{width}x{height}"))
+
+
+# Szybsza zmiana motywu Sun Valley. Oryginalna procedura `configure_colors` przy każdej zmianie ponownie
+# konfiguruje styl bazowy „.”, a w Tk każda zmiana stylu przelicza wszystkie widżety (ok. 2,5 ms na widżet).
+# Styl bazowy ustawiamy raz dla obu wariantów, a przy zmianie zostaje tylko paleta klasycznych widżetów Tk.
+_FAST_THEME_SWITCH_TCL = r"""
+namespace eval ::dicom_exporter {}
+
+proc ::dicom_exporter::preset_base_style {theme ns} {
+  upvar #0 ${ns}::colors colors
+  ttk::style theme settings $theme {
+    ttk::style configure . \
+      -background $colors(-bg) \
+      -foreground $colors(-fg) \
+      -troughcolor $colors(-bg) \
+      -focuscolor $colors(-selbg) \
+      -selectbackground $colors(-selbg) \
+      -selectforeground $colors(-selfg) \
+      -insertwidth 1 \
+      -insertcolor $colors(-fg) \
+      -fieldbackground $colors(-bg) \
+      -font SunValleyBodyFont \
+      -borderwidth 0 \
+      -relief flat
+    ttk::style map . -foreground [list disabled $colors(-disfg)]
+  }
+}
+
+::dicom_exporter::preset_base_style sun-valley-light ttk::theme::sv_light
+::dicom_exporter::preset_base_style sun-valley-dark ttk::theme::sv_dark
+
+proc configure_colors {} {
+  switch -- [ttk::style theme use] {
+    sun-valley-dark {set ns ttk::theme::sv_dark}
+    sun-valley-light {set ns ttk::theme::sv_light}
+    default {return}
+  }
+  upvar #0 ${ns}::colors colors
+  tk_setPalette \
+    background $colors(-bg) \
+    foreground $colors(-fg) \
+    highlightColor $colors(-selbg) \
+    selectBackground $colors(-selbg) \
+    selectForeground $colors(-selfg) \
+    activeBackground $colors(-selbg) \
+    activeForeground $colors(-selfg)
+}
+"""
+
+
+def optimize_theme_switch(root: tk.Tk) -> None:
+    """Zmiana motywu z jednym przeliczeniem układu okna zamiast kilku (patrz _FAST_THEME_SWITCH_TCL)."""
+    if sv_ttk is None:
+        return
+    try:
+        if root.tk.call("info", "procs", "configure_colors"):
+            root.tk.eval(_FAST_THEME_SWITCH_TCL)
+    except tk.TclError:
+        pass  # inna wersja motywu – zostaje jego oryginalne, wolniejsze przełączanie
+
+
+def window_bounds(window: tk.Misc) -> tuple[int, int, int, int] | None:
+    """Widoczny prostokąt okna razem z paskiem tytułu (bez niewidocznych ramek do zmiany rozmiaru)."""
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        hwnd = wintypes.HWND(ctypes.windll.user32.GetParent(window.winfo_id()))
+        rect = wintypes.RECT()
+        # DWMWA_EXTENDED_FRAME_BOUNDS; bez kompozycji DWM – zwykły prostokąt okna
+        if ctypes.windll.dwmapi.DwmGetWindowAttribute(hwnd, 9, ctypes.byref(rect), ctypes.sizeof(rect)) != 0:
+            if not ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+                return None
+    except (AttributeError, OSError):
+        return None
+    if rect.right <= rect.left or rect.bottom <= rect.top:
+        return None
+    return rect.left, rect.top, rect.right, rect.bottom
+
+
+def animations_enabled() -> bool:
+    """Ustawienie Windows „Pokaż animacje w systemie Windows”; gdy wyłączone, przejścia są natychmiastowe."""
+    if sys.platform != "win32":
+        return True
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        value = wintypes.BOOL(True)
+        if ctypes.windll.user32.SystemParametersInfoW(0x1042, 0, ctypes.byref(value), 0):  # SPI_GETCLIENTAREAANIMATION
+            return bool(value.value)
+    except (AttributeError, OSError):
+        pass
+    return True
+
+
+def crossfade(root: tk.Tk, change, duration: float = 0.22, hold_ms: int = 30) -> None:
+    """Wykonuje `change` pod zrzutem okna, który potem płynnie znika.
+
+    Zmiana motywu przemalowuje okno etapami (widżety ttk, klasyczne widżety Tk, pasek tytułu) – zrzut zasłania
+    te etapy, więc widać jedno płynne przejście zamiast migotania. `hold_ms` daje systemowi chwilę na
+    narysowanie nowego wyglądu pod zrzutem."""
+    previous = getattr(root, "_crossfade_overlay", None)
+    if previous is not None and previous.winfo_exists():
+        previous.destroy()
+    bounds = window_bounds(root) if root.state() in ("normal", "zoomed") else None
+    try:
+        snapshot = ImageGrab.grab(bounds, all_screens=True) if bounds is not None else None
+    except OSError:
+        snapshot = None
+    if snapshot is None:
+        change()
+        return
+
+    left, top, right, bottom = bounds
+    overlay = tk.Toplevel(root)
+    overlay.withdraw()
+    overlay.overrideredirect(True)
+    overlay.transient(root)
+    # Nowo pokazane okno bez aktywacji Windows potrafi umieścić pod oknem programu – zasłona istnieje ułamek
+    # sekundy, więc może być „na wierzchu” i jest jawnie podnoszona.
+    overlay.attributes("-topmost", True)
+    photo = ImageTk.PhotoImage(snapshot, master=root)
+    label = tk.Label(overlay, image=photo, borderwidth=0, highlightthickness=0)
+    label.image = photo
+    label.pack()
+    overlay.geometry(f"{right - left}x{bottom - top}+{left}+{top}")
+    overlay.deiconify()
+    overlay.lift()
+    overlay.update()
+    root._crossfade_overlay = overlay
+    try:
+        change()
+    finally:
+        root.update_idletasks()
+
+    animate = animations_enabled()
+    started: list[float] = []
+
+    def step() -> None:
+        if not overlay.winfo_exists():
+            return
+        now = time.perf_counter()
+        if not started:
+            started.append(now)
+        progress = (now - started[0]) / duration
+        if not animate or progress >= 1:
+            overlay.destroy()
+            return
+        overlay.attributes("-alpha", 1 - progress * progress * (3 - 2 * progress))  # łagodny start i koniec
+        overlay.after(12, step)
+
+    overlay.after(hold_ms, step)
 
 
 def rounded_rect(canvas: tk.Canvas, x1: float, y1: float, x2: float, y2: float, radius: float, **options) -> int:
