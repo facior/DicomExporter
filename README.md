@@ -1,195 +1,307 @@
 # DICOM Exporter
 
-Aplikacja do konwersji obrazów DICOM do **PNG, JPG, JPEG, TIFF, WebP i BMP**, eksportu całych serii jako
-**animacja GIF, wideo MP4 lub kolaż miniatur** oraz tworzenia **anonimizowanych kopii DICOM** – pojedynczo lub wsadowo.
-Interfejs po polsku i angielsku.
+**Konwersja obrazów medycznych DICOM do zwykłych obrazów, animacji i wideo – bez instalacji.**
 
-## Funkcje
+DICOM Exporter zamienia pliki DICOM (np. z płyty z badaniem tomografii, rezonansu, RTG czy USG) na **PNG, JPG,
+TIFF, WebP lub BMP**. Całą serię obrazów zapisze też jako **animację GIF, wideo MP4 albo kolaż miniatur**,
+a do publikacji czy nauki przygotuje **anonimizowane kopie DICOM**. Działa na pojedynczych plikach i na tysiącach
+naraz. Interfejs po polsku i angielsku.
 
-**Dodawanie plików**
-- wiele plików naraz (`Ctrl+O`), całe foldery (rekurencyjnie) i przeciąganie plików/folderów do okna,
-- okno wyboru pokazuje domyślnie tylko pliki DICOM; pliki bez rozszerzenia (np. `IM00001`) – po przełączeniu filtra,
-- pliki spoza formatu DICOM są rozpoznawane po zawartości i pomijane,
-- **płyty CD/DVD z plikiem DICOMDIR**: przycisk „Otwórz płytę” (lub dodanie folderu płyty) pokazuje drzewo
-  pacjent → badanie → seria, z którego wybierasz, co dodać.
+### ⬇️ [Pobierz najnowszą wersję](https://github.com/facior/DicomExporter/releases/latest)
 
-**Lista plików**
-- kolumny: nazwa, status, modalność, seria, liczba klatek, wymiary, rozmiar i lokalizacja; sortowanie kliknięciem nagłówka,
-- menu pod prawym przyciskiem: „Konwertuj tylko zaznaczone”, „Pokaż wynik”, „Otwórz lokalizację pliku”, „Usuń z listy”,
-- dwuklik na przekonwertowanym pliku otwiera wynik.
+![Okno główne DICOM Exporter](docs/screenshots/okno-glowne.png)
 
-**Podgląd i tagi**
-- powiększanie kółkiem myszy, przesuwanie przeciąganiem, dopasowanie do okna dwuklikiem,
-- **jasność i kontrast pod prawym przyciskiem myszy** (w pionie jasność, w poziomie kontrast),
-- przewijanie klatek i **obrazów serii** strzałkami ← →, suwakiem lub `Ctrl` + kółko myszy,
-- **odtwarzanie serii** (przycisk ▶ lub `Spacja`) w tempie ustawionym jako „Klatki na sekundę”,
-- karta „Tagi DICOM”: pełne drzewo tagów z wyszukiwarką; dwuklik kopiuje wartość.
+---
 
-**Jasność i kontrast**
-- okno zapisane w pliku (Window Center/Width, VOI LUT, Rescale – także Enhanced CT/MR), pełny zakres min–max
-  lub **własne okno** z suwakami i podglądem na żywo,
-- presety CT: mózg, tkanki miękkie, płuca, kości, śródpiersie, wątroba.
+## Spis treści
 
-**Eksport**
-- **profile eksportu**: gotowe („Prezentacja”, „Analiza 16-bit”, „E-mail”, „Anonimizowane kopie DICOM”, „Wideo serii”)
-  oraz własne profile zapisywane przyciskiem obok listy,
-- formaty: PNG, JPG, JPEG, TIFF, WebP, BMP; jakość dla JPG/JPEG/WebP,
-- **PNG i TIFF 16-bitowe** – obrazy w skali szarości zachowują tysiące odcieni zamiast 256,
-- zmiana rozmiaru: zmniejszenie do maksymalnych wymiarów albo skalowanie procentowe,
-- **nakładki na obraz**: podziałka w milimetrach, informacje o obrazie (seria, numer, data) i – opcjonalnie – dane pacjenta,
-- **szablony nazw plików** z danych DICOM, np. `{Modality}_{SeriesNumber:03}_{InstanceNumber:04}`
-  (także polskie aliasy: `{Modalność}_{Seria}_{NrObrazu}`),
-- układ folderów: jeden folder, jak w źródle albo **według szablonu**, np. `{StudyDate}_{StudyDescription}/S{SeriesNumber}_{SeriesDescription}`,
-- tryby serii: pliki z tej samej serii (lub klatki pliku wieloklatkowego) łączone w **GIF**, **MP4** albo **kolaż miniatur**,
-- **raport CSV** po konwersji (co się udało, co nie i dlaczego) – otwiera się poprawnie w Excelu.
+- [Pobieranie i uruchomienie](#pobieranie-i-uruchomienie)
+- [Szybki start](#szybki-start)
+- [Jak to zrobić?](#jak-to-zrobić)
+- [Skróty klawiszowe](#skróty-klawiszowe)
+- [Wiersz poleceń](#wiersz-poleceń)
+- [Rozwiązywanie problemów](#rozwiązywanie-problemów)
+- [Prywatność i zastrzeżenia](#prywatność-i-zastrzeżenia)
+- [Dla programistów](#dla-programistów)
 
-**Prywatność**
-- **anonimizowane kopie DICOM**: usuwane są dane pacjenta, lekarzy, placówki i tagi prywatne; identyfikatory
-  (pacjent, badanie, seria, obraz) zamieniane są na pseudonimy spójne w obrębie jednej konwersji, więc serie
-  pozostają seriami; daty można zachować lub wyczyścić,
-- **maskowanie napisów wpalonych w obraz** (np. dane pacjenta na zdjęciach USG): gotowy górny/dolny pasek albo
-  dowolne prostokąty rysowane myszą w podglądzie; maski działają dla wszystkich formatów, także kopii DICOM.
+## Pobieranie i uruchomienie
 
-**Wygoda**
-- postęp widoczny na ikonie aplikacji na pasku zadań, powiadomienie Windows i miganie paska zadań po zakończeniu,
-- motyw jasny/ciemny, język polski/angielski (zmiana bez utraty listy plików), zapamiętywanie ustawień,
-- równoległa konwersja w kilku wątkach, anulowanie, błędny plik nie przerywa partii.
+Wymagania: **Windows 10 lub 11 (64-bit)**. Nie trzeba niczego instalować.
 
-## Pobieranie i instalacja
+Na stronie [Releases](https://github.com/facior/DicomExporter/releases/latest) wybierz jeden z plików:
 
-Gotowe wersje są w zakładce [Releases](https://github.com/facior/DicomExporter/releases) – bez instalatora:
+| Plik | Dla kogo |
+| --- | --- |
+| **`DicomExporter-X.Y.Z.exe`** | Najprościej: jeden plik – pobierz i kliknij dwukrotnie. Przy każdym starcie program rozpakowuje się przez kilka sekund (widać wtedy ekran startowy). |
+| **`DicomExporter-X.Y.Z-portable.zip`** | Szybszy start: rozpakuj folder i uruchom `DicomExporter.exe`. W środku jest też `dicom-exporter-cli.exe` do [wiersza poleceń](#wiersz-poleceń). |
 
-- **`DicomExporter-X.Y.Z.exe`** – jeden plik: pobierz i uruchom. Przy każdym starcie program rozpakowuje się
-  na kilka sekund do folderu tymczasowego (widać wtedy ekran startowy),
-- **`DicomExporter-X.Y.Z-portable.zip`** – folder do rozpakowania: szybszy start oraz `dicom-exporter-cli.exe`
-  do wiersza poleceń (opcje opisane niżej).
+> **Ostrzeżenie Windows SmartScreen?** Program nie jest podpisany płatnym certyfikatem, dlatego przy pierwszym
+> uruchomieniu Windows może wyświetlić komunikat „System Windows ochronił ten komputer”. Kliknij
+> **„Więcej informacji”**, a potem **„Uruchom mimo to”**.
 
-Plik nie jest podpisany cyfrowo, więc Windows SmartScreen może wyświetlić ostrzeżenie – wybierz
-„Więcej informacji” → „Uruchom mimo to”.
+Program sam sprawdza przy starcie, czy jest nowsza wersja – jeśli tak, w stopce okna pojawi się link do pobrania.
 
-**Menu kontekstowe Eksploratora** („Otwórz w DICOM Exporter” i „Konwertuj do PNG (obok pliku)” dla plików
-`.dcm`/`.dicom` i folderów) włączysz w oknie „O programie” – wpisy trafiają tylko do rejestru bieżącego użytkownika
-i można je w każdej chwili wyłączyć. Tam też wyłączysz sprawdzanie nowych wersji przy uruchomieniu.
+## Szybki start
 
-## Uruchomienie ze źródeł (Windows)
+1. **Dodaj pliki** – przeciągnij pliki lub cały folder do okna albo użyj przycisków **Dodaj pliki** / **Dodaj folder**.
+   Pliki DICOM często nie mają rozszerzenia (np. `IM00001`) – program rozpozna je sam, a inne pliki pominie.
+2. **Sprawdź podgląd** – kliknij plik na liście, aby zobaczyć obraz po prawej stronie.
+3. **Wybierz folder docelowy** – na dole okna, przycisk **Wybierz…**.
+4. Kliknij **Konwertuj**. Postęp widać na pasku i na ikonie programu na pasku zadań, a wynik każdego pliku –
+   w kolumnie **Status**.
+5. **Otwórz** wyniki przyciskiem przy folderze docelowym albo dwuklikiem na przekonwertowanym pliku.
 
-Wymagany Python 3.10 lub nowszy. Kliknij dwukrotnie **`run.bat`** – przy pierwszym uruchomieniu skrypt utworzy
-środowisko `.venv` i zainstaluje zależności. Pliki lub foldery można też upuścić bezpośrednio na `run.bat`.
+Domyślnie powstają obrazy PNG z jasnością i kontrastem zapisanymi w pliku przez aparat – to zwykle najlepszy wybór.
+Wszystkie ustawienia są zapamiętywane do następnego uruchomienia.
 
-Ręcznie:
+## Jak to zrobić?
 
-```bat
-python -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python main.py
-```
+### Płyta z badaniem (DICOMDIR)
 
-Ustawienia (także maski i własne profile) są zapisywane w `%APPDATA%\DicomExporter\settings.json`.
+Płyty z badaniami zawierają plik `DICOMDIR` ze spisem pacjentów, badań i serii. Kliknij **Otwórz płytę** i wskaż ten
+plik (albo po prostu dodaj folder płyty). Pojawi się drzewo pacjent → badanie → seria, w którym zaznaczasz, co dodać
+do listy (`Ctrl` lub `Shift` pozwala zaznaczyć kilka pozycji).
 
-## Pola szablonów nazw
+### Jasność i kontrast
+
+W karcie **Podgląd**, sekcja **Jasność i kontrast**:
+
+- **Okno z pliku DICOM** – ustawienia zapisane przez aparat (zalecane),
+- **Pełny zakres jasności** – cały zakres wartości obrazu, przydatne gdy obraz jest za ciemny lub prześwietlony,
+- **Własne okno** – suwaki **Środek** (jasność) i **Szerokość** (kontrast) albo gotowe presety dla tomografii:
+  mózg, tkanki miękkie, płuca, kości, śródpiersie, wątroba.
+
+Najszybciej: **przeciągnij obraz w podglądzie prawym przyciskiem myszy** – w pionie zmienia się jasność,
+w poziomie kontrast. Ustawienia z podglądu obowiązują przy konwersji.
+
+### Przeglądanie serii
+
+Pod podglądem są przyciski ◀ ▶ i suwak. Obrazy serii (lub klatki pliku wieloklatkowego) zmieniasz strzałkami ← →
+albo `Ctrl` + kółkiem myszy. **Spacja** lub przycisk ▶ odtwarza serię. Kółko myszy powiększa obraz, przeciąganie
+lewym przyciskiem go przesuwa, a dwuklik dopasowuje do okna.
+
+### Format, jakość i rozmiar
+
+W karcie **Eksport**:
+
+- **Format obrazu** – PNG (bez utraty jakości), JPG/JPEG (mniejsze pliki, suwak jakości), TIFF, WebP, BMP,
+- **Głębia bitowa 16 bit** (PNG i TIFF) – zachowuje tysiące odcieni szarości zamiast 256; przydatne do dalszej analizy,
+- **Rozmiar** – oryginalny, zmniejszenie do maksymalnych wymiarów (np. do prezentacji) lub skalowanie w procentach,
+- **Nakładki na obraz** – podziałka w milimetrach, opis obrazu (seria, numer, data) i – jeśli trzeba – dane pacjenta.
+  Nakładki widać od razu w podglądzie.
+
+![Karta Eksport](docs/screenshots/eksport.png)
+
+### Profile – gotowe zestawy ustawień
+
+Na górze karty **Eksport** wybierz profil, a program ustawi wszystko za Ciebie:
+
+| Profil | Co robi |
+| --- | --- |
+| **Prezentacja** | JPG w rozmiarze do Full HD, z podziałką i opisem obrazu |
+| **Analiza (PNG 16-bit)** | PNG 16-bit, pełny zakres jasności, bez zmian rozmiaru |
+| **E-mail** | małe pliki JPG (do 1024 px), tylko pierwsza klatka |
+| **Anonimizowane kopie DICOM** | kopie plików DICOM bez danych osobowych |
+| **Wideo serii (MP4)** | seria jako wideo z podziałką i opisem |
+
+Własne ustawienia zapiszesz jako profil przyciskiem obok listy profili.
+
+### Seria jako animacja, wideo lub kolaż
+
+W karcie **Eksport** → **Tryb eksportu** wybierz **Seria jako animacja GIF**, **Seria jako wideo MP4** albo
+**Seria jako kolaż miniatur**. Pliki z tej samej serii zostaną ułożone według numeru obrazu i połączone w jeden plik.
+Tempo animacji i wideo ustawisz polem **Klatki na sekundę**.
+
+### Anonimizacja (np. do publikacji lub na zajęcia)
+
+1. W karcie **Eksport** wybierz tryb **Anonimizowane kopie DICOM** (lub profil o tej nazwie).
+2. Program usunie dane pacjenta, lekarzy i placówki oraz tagi prywatne, a identyfikatory badań zamieni na pseudonimy
+   (pliki z jednej serii nadal tworzą serię). Możesz podać nazwę pacjenta w kopii i zdecydować, czy zachować daty badań.
+3. **Napisy wpalone w obraz** (np. nazwisko na zdjęciu USG) zamaskuj w karcie **Podgląd**, sekcja
+   **Maskowanie napisów**: **Górny pasek**, **Dolny pasek** albo **Rysuj** i zaznacz prostokąt myszą na obrazie.
+   Maski działają dla wszystkich formatów, także zwykłych obrazów.
+
+> Przed udostępnieniem danych sprawdź wynik. Uważaj też na nazwy plików i folderów – mogą zawierać nazwisko pacjenta.
+
+### Nazwy plików i foldery
+
+W karcie **Eksport** → **Nazwy plików** wpisz szablon z polami w nawiasach klamrowych (przycisk **Pola** podpowiada
+dostępne pola). Przykład: `{Modality}_{SeriesNumber:03}_{InstanceNumber:04}` daje `CT_002_0015.png`.
+Pod ustawieniami widać przykładową nazwę dla wybranego pliku.
 
 | Pole | Znaczenie |
 | --- | --- |
-| `{file}` / `{Plik}` | nazwa pliku źródłowego |
-| `{frame}` / `{Klatka}` | numer klatki (dopisywany automatycznie przy wielu klatkach) |
-| `{Modality}` / `{Modalność}` | modalność (CT, MR…) |
-| `{SeriesNumber}` / `{Seria}` | numer serii |
-| `{InstanceNumber}` / `{NrObrazu}` | numer obrazu |
-| `{StudyDate}`, `{StudyDescription}`, `{SeriesDescription}`, `{BodyPartExamined}` | data i opisy badania/serii |
-| dowolne słowo kluczowe DICOM | np. `{PatientID}`, `{AccessionNumber}` |
+| `{file}` | nazwa pliku źródłowego |
+| `{frame}` | numer klatki (przy wielu klatkach dopisywany automatycznie) |
+| `{Modality}` lub `{Modalność}` | modalność (CT, MR, US…) |
+| `{SeriesNumber}` lub `{Seria}` | numer serii |
+| `{InstanceNumber}` lub `{NrObrazu}` | numer obrazu |
+| `{StudyDate}`, `{StudyDescription}`, `{SeriesDescription}` | data i opisy badania i serii |
+| dowolna nazwa pola DICOM | np. `{BodyPartExamined}`, `{AccessionNumber}` |
 
-Po dwukropku można podać format liczby: `{InstanceNumber:04}` → `0007`. Brakujące wartości są zastępowane przez `NA`.
-W anonimizowanych kopiach pola pacjenta przyjmują wartości pseudonimów.
+`:03` po nazwie pola dopełnia liczbę zerami do 3 cyfr. Brakujące wartości są zastępowane przez `NA`.
+
+**Foldery** mogą być: wszystko w jednym folderze, taka sama struktura jak w dodanych folderach albo **według
+szablonu**, np. `{StudyDate}_{StudyDescription}/S{SeriesNumber}_{SeriesDescription}` (znak `/` tworzy podfolder).
+
+### Menu kontekstowe Eksploratora
+
+W oknie **O programie** (przycisk w nagłówku lub `F1`) włącz **Polecenia w menu kontekstowym Eksploratora**.
+Po kliknięciu prawym przyciskiem pliku `.dcm`/`.dicom` lub folderu pojawią się polecenia:
+
+- **Otwórz w DICOM Exporter** – otwiera program z tym plikiem lub folderem,
+- **Konwertuj do PNG (obok pliku)** – szybka konwersja bez otwierania okna programu.
+
+W Windows 11 polecenia są pod **„Pokaż więcej opcji”**. Jeśli przeniesiesz program w inne miejsce, włącz tę opcję ponownie.
+
+### Raport z konwersji
+
+Po każdej konwersji w folderze docelowym zapisuje się raport CSV (otwiera się w Excelu): co się udało, co nie
+i dlaczego. Link **Otwórz raport** pojawia się przy pasku postępu. Raport wyłączysz w karcie **Eksport** → **Opcje**.
+
+### Lista plików
+
+Kliknij nagłówek kolumny, aby posortować listę. Prawy przycisk myszy na pliku otwiera menu:
+**Konwertuj tylko zaznaczone**, **Pokaż wynik**, **Otwórz lokalizację pliku**, **Usuń z listy**.
+Karta **Tagi DICOM** pokazuje wszystkie dane zapisane w pliku, z wyszukiwarką (dwuklik kopiuje wartość).
+
+### Język i motyw
+
+W nagłówku okna zmienisz **język** (polski / angielski) oraz włączysz **ciemny motyw**.
+
+## Skróty klawiszowe
+
+| Skrót | Działanie |
+| --- | --- |
+| `Ctrl+O` | Dodaj pliki |
+| `Delete` | Usuń zaznaczone pliki z listy |
+| `Ctrl+A` | Zaznacz wszystkie pliki |
+| `F1` | Okno „O programie” |
+| `←` / `→`, `Ctrl` + kółko myszy | Poprzednia / następna klatka lub obraz serii |
+| `Spacja` | Odtwarzanie serii |
+| Kółko myszy | Powiększanie podglądu |
+| Prawy przycisk + przeciąganie | Jasność i kontrast w podglądzie |
+| Dwuklik na podglądzie | Dopasowanie do okna |
 
 ## Wiersz poleceń
 
+Do automatyzacji służy `dicom-exporter-cli.exe` z wersji ZIP. Przykłady:
+
 ```bat
-.venv\Scripts\python -m dicom_exporter D:\Badania -o D:\Eksport --profile presentation --mask-top 10
-.venv\Scripts\python -m dicom_exporter D:\Badania -o D:\Anonimowe --export dicom --mask-top 8 --anon-name BADANIE
-.venv\Scripts\python -m dicom_exporter D:\Badania -o D:\Eksport -f png --bit-depth 16 --preset lung ^
+:: Cały folder do PNG
+dicom-exporter-cli.exe "D:\Badania" -o "D:\Eksport"
+
+:: Profil „Prezentacja” i zamaskowany górny pasek (10% wysokości)
+dicom-exporter-cli.exe "D:\Badania" -o "D:\Eksport" --profile presentation --mask-top 10
+
+:: Anonimizowane kopie DICOM
+dicom-exporter-cli.exe "D:\Badania" -o "D:\Anonimowe" --export dicom --mask-top 8
+
+:: PNG 16-bit, okno płucne, własne nazwy i foldery, raport CSV
+dicom-exporter-cli.exe "E:\DICOMDIR" -o "D:\Eksport" --bit-depth 16 --preset lung ^
     --name-template "{Modality}_{SeriesNumber:03}_{InstanceNumber:04}" --layout template --report
 ```
+
+<details>
+<summary>Wszystkie opcje</summary>
 
 | Opcja | Znaczenie |
 | --- | --- |
 | `-o, --output` | folder docelowy (wymagany) |
-| `--profile` | `presentation`, `analysis16`, `email`, `anonymized_dicom`, `cine_mp4` (jawne opcje mają pierwszeństwo) |
+| `--profile` | `presentation`, `analysis16`, `email`, `anonymized_dicom`, `cine_mp4` |
 | `-f, --format` | `png` (domyślnie), `jpg`, `jpeg`, `tiff`, `webp`, `bmp` |
 | `--bit-depth` | `8` lub `16` (PNG, TIFF) |
 | `-q, --quality` | jakość JPG/WebP 1–100 (domyślnie 95) |
 | `--window` | `dicom` (domyślnie), `minmax`, `custom` (z `--center` i `--width`) |
 | `--preset` | `brain`, `soft_tissue`, `lung`, `bone`, `mediastinum`, `liver` |
 | `--max-size` / `--scale` | zmniejsz do np. `1024x768` / skaluj o procent |
-| `--name-template` | szablon nazwy pliku |
-| `--layout` | `flat`, `source` (domyślnie), `template` (z `--folder-template`) |
-| `--export` | `images` (domyślnie), `gif`, `mp4`, `montage`, `dicom` (anonimizowane kopie) |
-| `--fps` | klatki na sekundę dla GIF/MP4 |
-| `--mask X0,Y0,X1,Y1` | zamaskuj prostokąt podany jako ułamki wymiarów (można powtarzać) |
-| `--mask-top` / `--mask-bottom` | zamaskuj górny / dolny pasek o wysokości w % |
-| `--overlay-scale`, `--overlay-info`, `--overlay-patient` | nakładki: podziałka, informacje o obrazie, dane pacjenta |
-| `--anon-name`, `--keep-dates` | nazwa pacjenta i zachowanie dat w anonimizowanych kopiach |
-| `--first-frame` | z plików wieloklatkowych tylko pierwsza klatka |
-| `--overwrite` | nadpisuj istniejące pliki |
-| `--report` | zapisz raport CSV |
+| `--name-template`, `--layout`, `--folder-template` | nazwy plików i układ folderów (`flat`, `source`, `template`) |
+| `--export` | `images` (domyślnie), `gif`, `mp4`, `montage`, `dicom` |
+| `--fps` | klatki na sekundę dla GIF i MP4 |
+| `--mask X0,Y0,X1,Y1`, `--mask-top`, `--mask-bottom` | maskowanie prostokąta (ułamki wymiarów) lub pasków (w %) |
+| `--overlay-scale`, `--overlay-info`, `--overlay-patient` | nakładki: podziałka, opis obrazu, dane pacjenta |
+| `--anon-name`, `--keep-dates` | nazwa pacjenta i daty w anonimizowanych kopiach |
+| `--first-frame`, `--overwrite`, `--report` | tylko pierwsza klatka, nadpisywanie plików, raport CSV |
 | `--lang` | `pl` (domyślnie) lub `en` |
-| `-j, --workers` | liczba wątków |
 
-Jako wejście można podać także plik `DICOMDIR` – zostaną dodane wszystkie obrazy z płyty.
-Kod wyjścia: `0` – sukces, `1` – brak plików lub błędne opcje, `2` – część plików się nie przekonwertowała.
+Jako wejście można podać pliki, foldery i plik `DICOMDIR`. Kod wyjścia: `0` – sukces, `1` – brak plików lub błędne
+opcje, `2` – część plików się nie przekonwertowała. Pełny opis: `dicom-exporter-cli.exe --help`.
 
-## Uwagi
+</details>
 
-- Anonimizacja realizuje uproszczony podstawowy profil poufności DICOM (PS3.15, zał. E). Przed udostępnieniem danych
-  sprawdź wynik – napisy wpalone w obraz trzeba zamaskować, a nazwy plików i folderów źródłowych mogą zawierać dane osobowe.
-- Zwykłe obrazy wynikowe nie zawierają metadanych DICOM, ale szablony nazw i nakładka „Dane pacjenta” mogą umieścić
-  dane osobowe w nazwach plików lub na obrazie.
-- Program nie jest wyrobem medycznym – eksportowane obrazy nie są przeznaczone do celów diagnostycznych.
-- Powiadomienie po konwersji pojawi się tylko wtedy, gdy powiadomienia są włączone w ustawieniach Windows.
+## Rozwiązywanie problemów
 
-## Struktura projektu
+| Problem | Rozwiązanie |
+| --- | --- |
+| Windows blokuje uruchomienie | „Więcej informacji” → „Uruchom mimo to” (patrz [Pobieranie](#pobieranie-i-uruchomienie)). |
+| Program uruchamia się kilka sekund | Pojedynczy plik `.exe` rozpakowuje się przy każdym starcie – wersja ZIP startuje szybciej. |
+| Status „Plik nie zawiera obrazu” | To plik DICOM bez obrazu (np. raport, plan leczenia, `DICOMDIR`) – można go pominąć. |
+| Status „Nie można zdekodować obrazu” | Plik jest uszkodzony albo używa rzadkiego, niezgodnego ze standardem kodowania. |
+| Obraz jest prawie czarny lub biały | W podglądzie zmień **Jasność i kontrast** na **Pełny zakres jasności** albo przeciągnij obraz prawym przyciskiem. |
+| Nie ma powiadomienia po konwersji | Powiadomienia są wyłączone w ustawieniach Windows – przycisk programu na pasku zadań i tak zamiga. |
+| Brak poleceń w menu kontekstowym | W Windows 11 są pod „Pokaż więcej opcji”; po przeniesieniu programu włącz je ponownie w „O programie”. |
+| Chcę przywrócić ustawienia domyślne | Zamknij program i usuń plik `%APPDATA%\DicomExporter\settings.json`. |
+
+Znalazłeś błąd lub masz pomysł? [Zgłoś go tutaj](https://github.com/facior/DicomExporter/issues).
+
+## Prywatność i zastrzeżenia
+
+- Pliki są przetwarzane **wyłącznie na Twoim komputerze** – program nie wysyła ich ani żadnych danych o nich do
+  internetu. Jedyne połączenie to sprawdzanie nowej wersji na GitHubie, które można wyłączyć w oknie „O programie”.
+- Zwykłe obrazy wynikowe nie zawierają danych DICOM, ale dane pacjenta mogą być **wpalone w obraz**, a szablony nazw
+  lub nakładka „Dane pacjenta” mogą umieścić je w nazwach plików lub na obrazie.
+- Anonimizacja realizuje uproszczony podstawowy profil poufności DICOM (PS3.15, zał. E) – przed udostępnieniem
+  danych zawsze sprawdź wynik.
+- **Program nie jest wyrobem medycznym** – eksportowane obrazy nie są przeznaczone do celów diagnostycznych.
+
+## Dla programistów
+
+<details>
+<summary>Uruchomienie ze źródeł, testy, budowanie i wydania</summary>
+
+Wymagany Python 3.10 lub nowszy. Najprościej: dwuklik na `run.bat` (utworzy środowisko `.venv` i zainstaluje zależności).
+
+```bat
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python main.py                        :: aplikacja
+.venv\Scripts\python -m dicom_exporter --help       :: wiersz poleceń
+
+.venv\Scripts\pip install pytest pyinstaller
+.venv\Scripts\python -m pytest tests                :: testy
+.venv\Scripts\python packaging\build.py             :: dist\DicomExporter-X.Y.Z.exe i wersja ZIP
+```
+
+**Wydanie:** zmień `__version__` w `dicom_exporter/__init__.py`, zrób commit i wypchnij tag, np.
+`git tag v1.1.0` oraz `git push origin main v1.1.0`. GitHub Actions uruchomi testy, zbuduje `.exe` i ZIP
+i opublikuje wydanie. Testy uruchamiają się też przy każdym pushu na `main`.
+
+**Struktura projektu**
 
 ```
-main.py                        start aplikacji okienkowej
+main.py, cli_main.py           start aplikacji okienkowej i wersji konsolowej
 dicom_exporter/converter.py    konwersja: piksele, okna, maski, rozmiar, zapis, serie, kopie DICOM
-dicom_exporter/anonymize.py    anonimizacja zbiorów danych DICOM
-dicom_exporter/overlays.py     nakładki: podziałka i opisy na obrazie
-dicom_exporter/profiles.py     gotowe profile eksportu
+dicom_exporter/anonymize.py    anonimizacja DICOM
+dicom_exporter/overlays.py     podziałka i opisy na obrazie
 dicom_exporter/naming.py       szablony nazw plików i folderów
-dicom_exporter/dicominfo.py    kolumny listy, tagi DICOM, odczyt DICOMDIR
+dicom_exporter/profiles.py     gotowe profile eksportu
+dicom_exporter/dicominfo.py    dane do listy, tagi, odczyt DICOMDIR
 dicom_exporter/report.py       raport CSV
-dicom_exporter/i18n.py         tłumaczenia (PL/EN)
-dicom_exporter/gui.py          główne okno
-dicom_exporter/preview.py      podgląd: powiększanie, okno pod prawym przyciskiem, rysowanie masek
-dicom_exporter/dialogs.py      okna „O programie” i wyboru z płyty
-dicom_exporter/widgets.py      motyw, ikony i pomocnicze widżety
+dicom_exporter/gui.py          główne okno (preview.py, dialogs.py, widgets.py – elementy interfejsu)
+dicom_exporter/quick.py        szybka konwersja z menu kontekstowego
+dicom_exporter/shellmenu.py    polecenia w menu kontekstowym Eksploratora
+dicom_exporter/updates.py      sprawdzanie nowych wersji
 dicom_exporter/winshell.py     pasek zadań, powiadomienia, Eksplorator
+dicom_exporter/i18n.py         tłumaczenia (PL/EN)
 dicom_exporter/cli.py          wiersz poleceń
-dicom_exporter/quick.py        szybka konwersja do PNG z menu kontekstowego Eksploratora
-dicom_exporter/updates.py      sprawdzanie nowych wersji na GitHubie
-dicom_exporter/shellmenu.py    polecenia w menu kontekstowym Eksploratora (bez instalatora)
-cli_main.py                    start wersji konsolowej (dicom-exporter-cli.exe)
 packaging/                     budowanie .exe (PyInstaller), ikona i ekran startowy
-.github/workflows/             testy i automatyczne wydania (GitHub Actions)
 tests/                         testy (pytest)
 ```
 
-Testy: `.venv\Scripts\pip install pytest` i `.venv\Scripts\python -m pytest tests`.
+</details>
 
-## Budowanie i wydania
+## Licencja i autor
 
-```bat
-.venv\Scripts\pip install pyinstaller
-.venv\Scripts\python packaging\build.py     :: dist\DicomExporter-X.Y.Z.exe (jeden plik) i wersja przenośna ZIP
-```
-
-Wydania tworzą się automatycznie na GitHubie (GitHub Actions): zmień `__version__` w `dicom_exporter/__init__.py`,
-zrób commit i wypchnij tag, np. `git tag v1.1.0` oraz `git push origin v1.1.0`. Workflow uruchomi testy, zbuduje
-plik `.exe` i wersję przenośną i dołączy je do wydania. Testy uruchamiają się też przy każdym pushu na `main`.
-
-## Autor
+Program jest udostępniony na licencji [MIT](LICENSE).
 
 **Łukasz Kubieniec** – [lukasz.kubieniec00@gmail.com](mailto:lukasz.kubieniec00@gmail.com) · [GitHub](https://github.com/facior)
-
-Dane autora są zapisane w `dicom_exporter/__init__.py` i wyświetlane w stopce okna oraz w oknie „O programie”
-(przycisk w nagłówku lub klawisz `F1`). Okno ma karty: **Ogólne** (autor, kontakt, prywatność, zastrzeżenie),
-**Możliwości** oraz **Skróty klawiszowe**.
