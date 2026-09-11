@@ -1,4 +1,4 @@
-## Co nowego w wersji 1.1.1
+## Co nowego w wersji 1.2.0
 
-* Płynne przejście między jasnym a ciemnym motywem – bez migotania i prawie dwa razy szybciej.
-* W oknie „O programie” jest link do strony projektu na GitHubie.
+* Przewodnik po programie: przy pierwszym uruchomieniu strzałki i opisy pokazują krok po kroku, jak dodać pliki, ustawić podgląd i eksport oraz rozpocząć konwersję.
+* Przewodnik można w każdej chwili uruchomić ponownie w oknie „O programie” (F1).
