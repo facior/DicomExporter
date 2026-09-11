@@ -1,6 +1,6 @@
 """DICOM Exporter - konwersja obrazów DICOM do PNG/JPG."""
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Łukasz Kubieniec"
 __email__ = "lukasz.kubieniec00@gmail.com"
 

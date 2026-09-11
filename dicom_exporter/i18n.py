@@ -199,9 +199,9 @@ STRINGS: dict[str, tuple[str, str]] = {
     "cap_processing": ("Przetwarzanie", "Processing"),
     "cap_processing_text": (
         "wsadowe i równoległe; profile, szablony nazw i folderów, zmiana rozmiaru, maskowanie napisów, "
-        "podziałka i opisy na obrazie, raport CSV",
+        "podziałka i opisy na obrazie, podsumowanie z listą błędów",
         "batch and parallel; profiles, name and folder templates, resizing, masking burned-in text, "
-        "scale bar and labels on images, CSV report",
+        "scale bar and labels on images, summary with a list of errors",
     ),
     "sc_add": ("Dodaj pliki", "Add files"),
     "sc_delete": ("Usuń zaznaczone pliki z listy", "Remove selected files from the list"),
@@ -221,11 +221,11 @@ STRINGS: dict[str, tuple[str, str]] = {
     "sc_window_drag": ("Jasność (w pionie) i kontrast (w poziomie)", "Brightness (vertical) and contrast (horizontal)"),
     "privacy_note": (
         "Pliki są przetwarzane wyłącznie na tym komputerze – program nie wysyła ich ani żadnych danych o nich "
-        "do internetu (jedyne połączenie to opcjonalne sprawdzanie aktualizacji na GitHubie). "
+        "do internetu (jedyne połączenie to opcjonalne sprawdzanie i pobieranie aktualizacji z GitHuba). "
         "Zapisane obrazy nie zawierają metadanych DICOM, ale dane pacjenta mogą być wpalone w sam obraz "
         "(np. napisy na zdjęciach USG), a szablony nazw mogą je umieścić w nazwach plików.",
         "Files are processed only on this computer – neither they nor any data about them is sent to the internet "
-        "(the only connection is the optional update check on GitHub). "
+        "(the only connection is the optional checking for and downloading of updates from GitHub). "
         "Saved images contain no DICOM metadata, but patient data may be burned into the image itself "
         "(e.g. ultrasound annotations) and name templates can put it into file names.",
     ),
@@ -277,7 +277,6 @@ STRINGS: dict[str, tuple[str, str]] = {
     "btn_cancel": ("Anuluj", "Cancel"),
     "btn_convert": ("Konwertuj", "Convert"),
     "btn_close": ("Zamknij", "Close"),
-    "open_report": ("Otwórz raport", "Open report"),
     "status_ready": ("Dodaj pliki, aby rozpocząć", "Add files to get started"),
     "status_scanning": ("Wyszukiwanie plików DICOM…", "Looking for DICOM files…"),
     "status_added": ("Dodano {files}", "Added {files}"),
@@ -287,7 +286,7 @@ STRINGS: dict[str, tuple[str, str]] = {
     "status_converting": ("Konwertowanie… {done} z {total}", "Converting… {done} of {total}"),
     "status_cancelling": ("Anulowanie… trwające pliki zostaną dokończone", "Cancelling… files in progress will be finished"),
     "status_cancelled_prefix": ("Anulowano · {summary}", "Cancelled · {summary}"),
-    "status_report_failed": (" · nie udało się zapisać raportu: {error}", " · could not save the report: {error}"),
+    "status_updated": ("Zaktualizowano do wersji {version}", "Updated to version {version}"),
     "dialog_choose_files": ("Wybierz pliki DICOM", "Choose DICOM files"),
     "dialog_dicom_files": ("Pliki DICOM", "DICOM files"),
     "dialog_all_files": ("Wszystkie pliki (np. DICOM bez rozszerzenia)", "All files (e.g. DICOM without an extension)"),
@@ -314,7 +313,25 @@ STRINGS: dict[str, tuple[str, str]] = {
     "msg_no_result": ("Zaznaczone pliki nie mają jeszcze wyników konwersji.", "The selected files have no conversion results yet."),
     "msg_fatal": ("Konwersja przerwana:\n{error}", "Conversion stopped:\n{error}"),
     "notify_title": ("DICOM Exporter – konwersja zakończona", "DICOM Exporter – conversion finished"),
-    "notify_errors": ("Szczegóły błędów: kolumna „Status” i raport CSV.", "Error details: the “Status” column and the CSV report."),
+    "notify_errors": ("Szczegóły błędów znajdziesz w oknie podsumowania.", "Error details are in the summary window."),
+    # --- Podsumowanie konwersji
+    "summary_title_ok": ("Konwersja zakończona", "Conversion finished"),
+    "summary_title_errors": ("Konwersja zakończona z błędami", "Conversion finished with errors"),
+    "summary_title_cancelled": ("Konwersja anulowana", "Conversion cancelled"),
+    "summary_saved": ("Zapisano {images} · czas: {time}", "Saved {images} · time: {time}"),
+    "summary_ok": ("Udane", "Converted"),
+    "summary_failed": ("Z błędami", "Failed"),
+    "summary_cancelled": ("Anulowane", "Cancelled"),
+    "summary_all_ok": ("Wszystkie pliki zostały przekonwertowane bez błędów.", "All files were converted without errors."),
+    "summary_errors_title": ("Pliki, których nie udało się przekonwertować", "Files that could not be converted"),
+    "summary_hint": ("Dwuklik pokazuje plik w Eksploratorze.", "Double-click shows the file in Explorer."),
+    "summary_copied": ("Skopiowano listę błędów do schowka.", "The error list was copied to the clipboard."),
+    "col_error": ("Błąd", "Error"),
+    "btn_copy_errors": ("Kopiuj listę błędów", "Copy error list"),
+    "btn_open_output": ("Otwórz folder docelowy", "Open output folder"),
+    "duration_seconds": ("{seconds} s", "{seconds} s"),
+    "duration_minutes": ("{minutes} min {seconds:02d} s", "{minutes} min {seconds:02d} s"),
+    "duration_hours": ("{hours} h {minutes:02d} min", "{hours} h {minutes:02d} min"),
     # --- Podgląd
     "tab_preview": ("Podgląd", "Preview"),
     "tab_tags": ("Tagi DICOM", "DICOM tags"),
@@ -415,7 +432,6 @@ STRINGS: dict[str, tuple[str, str]] = {
     "options": ("Opcje", "Options"),
     "switch_all_frames": ("Wszystkie klatki z plików wieloklatkowych", "All frames of multi-frame files"),
     "switch_overwrite": ("Nadpisuj istniejące pliki", "Overwrite existing files"),
-    "switch_report": ("Zapisz raport CSV po konwersji", "Save a CSV report after conversion"),
     "field_file": ("nazwa pliku źródłowego", "source file name"),
     "field_frame": ("numer klatki", "frame number"),
     "field_Modality": ("modalność (CT, MR…)", "modality (CT, MR…)"),
@@ -469,11 +485,59 @@ STRINGS: dict[str, tuple[str, str]] = {
     "quick_title": ("Szybka konwersja do PNG", "Quick conversion to PNG"),
     "quick_done": ("Obrazy PNG zapisano obok plików źródłowych.", "PNG images were saved next to the source files."),
     "btn_show_files": ("Pokaż pliki", "Show files"),
-    "update_available": ("Dostępna nowa wersja {version} – pobierz", "New version {version} available – download"),
+    "update_available": ("Dostępna nowa wersja {version} – zaktualizuj", "New version {version} available – update"),
     "switch_check_updates": (
         "Sprawdzaj aktualizacje przy uruchomieniu (połączenie z GitHubem)",
         "Check for updates at startup (connects to GitHub)",
     ),
+    "update_check_now": ("Sprawdź teraz", "Check now"),
+    "update_checking": ("Sprawdzanie…", "Checking…"),
+    "update_latest": ("Masz najnowszą wersję ({version}).", "You have the latest version ({version})."),
+    "update_check_failed": (
+        "Nie udało się sprawdzić aktualizacji. Sprawdź połączenie z internetem.\n\n{error}",
+        "Could not check for updates. Check your internet connection.\n\n{error}",
+    ),
+    "update_title": ("Aktualizacja programu", "Program update"),
+    "update_heading": ("Dostępna jest wersja {version}", "Version {version} is available"),
+    "update_current": ("Używasz wersji {version}", "You are using version {version}"),
+    "update_notes": ("Co nowego", "What's new"),
+    "update_release_page": ("Zobacz wydanie na GitHubie", "View the release on GitHub"),
+    "update_explain": (
+        "Nowa wersja zostanie pobrana z GitHuba, zastąpi obecny plik programu i uruchomi się ponownie. "
+        "Ustawienia i profile zostaną zachowane.",
+        "The new version is downloaded from GitHub, replaces the current program file and starts again. "
+        "Settings and profiles are kept.",
+    ),
+    "update_manual": (
+        "Ta wersja programu (ZIP lub uruchomiona ze źródeł) nie aktualizuje się sama – pobierz nową wersję "
+        "ze strony wydania i zastąp nią dotychczasowy folder.",
+        "This copy of the program (ZIP or run from source) does not update itself – download the new version "
+        "from the release page and replace the old folder with it.",
+    ),
+    "update_wait_conversion": (
+        "Aktualizacja będzie możliwa po zakończeniu konwersji.",
+        "The update will be possible when the conversion finishes.",
+    ),
+    "update_downloading": ("Pobieranie… {done} z {total}", "Downloading… {done} of {total}"),
+    "update_downloading_unknown": ("Pobieranie… {done}", "Downloading… {done}"),
+    "update_restarting": ("Uruchamianie nowej wersji…", "Starting the new version…"),
+    "update_cancelled": ("Pobieranie anulowane.", "Download cancelled."),
+    "update_failed": ("Nie udało się zaktualizować: {error}", "Update failed: {error}"),
+    "btn_update_now": ("Zaktualizuj teraz", "Update now"),
+    "btn_update_retry": ("Spróbuj ponownie", "Try again"),
+    "btn_update_later": ("Później", "Later"),
+    "btn_download_page": ("Pobierz ze strony", "Download from the website"),
+    "update_err_no_asset": ("wydanie nie zawiera pliku .exe", "the release has no .exe file"),
+    "update_err_folder": (
+        "brak uprawnień do zapisu w folderze {folder} – przenieś program np. na Pulpit lub pobierz nową wersję ze strony",
+        "no permission to write to the folder {folder} – move the program e.g. to the Desktop or download the new version from the website",
+    ),
+    "update_err_download": ("błąd pobierania ({error})", "download error ({error})"),
+    "update_err_size": ("pobrany plik jest niekompletny", "the downloaded file is incomplete"),
+    "update_err_checksum": ("suma kontrolna pobranego pliku się nie zgadza", "the checksum of the downloaded file does not match"),
+    "update_err_invalid": ("pobrany plik nie jest programem Windows", "the downloaded file is not a Windows program"),
+    "update_err_install": ("nie można podmienić pliku programu ({error})", "cannot replace the program file ({error})"),
+    "update_err_start": ("nie można uruchomić nowej wersji ({error})", "cannot start the new version ({error})"),
     # --- Okna dialogowe
     "about_title": ("O programie {app}", "About {app}"),
     "about_description": (

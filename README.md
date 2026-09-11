@@ -32,14 +32,23 @@ Na stronie [Releases](https://github.com/facior/DicomExporter/releases/latest) w
 
 | Plik | Dla kogo |
 | --- | --- |
-| **`DicomExporter-X.Y.Z.exe`** | Najprościej: jeden plik – pobierz i kliknij dwukrotnie. Przy każdym starcie program rozpakowuje się przez kilka sekund (widać wtedy ekran startowy). |
-| **`DicomExporter-X.Y.Z-portable.zip`** | Szybszy start: rozpakuj folder i uruchom `DicomExporter.exe`. W środku jest też `dicom-exporter-cli.exe` do [wiersza poleceń](#wiersz-poleceń). |
+| **`DicomExporter-X.Y.Z.exe`** | Najprościej: jeden plik – pobierz i kliknij dwukrotnie. Aktualizuje się sam jednym kliknięciem. Przy każdym starcie rozpakowuje się przez kilka sekund (widać wtedy ekran startowy). |
+| **`DicomExporter-X.Y.Z-portable.zip`** | Szybszy start: rozpakuj folder i uruchom `DicomExporter.exe`. W środku jest też `dicom-exporter-cli.exe` do [wiersza poleceń](#wiersz-poleceń). Nowe wersje pobiera się ręcznie. |
 
 > **Ostrzeżenie Windows SmartScreen?** Program nie jest podpisany płatnym certyfikatem, dlatego przy pierwszym
 > uruchomieniu Windows może wyświetlić komunikat „System Windows ochronił ten komputer”. Kliknij
 > **„Więcej informacji”**, a potem **„Uruchom mimo to”**.
 
-Program sam sprawdza przy starcie, czy jest nowsza wersja – jeśli tak, w stopce okna pojawi się link do pobrania.
+### Aktualizacje
+
+Program sam sprawdza przy starcie, czy na GitHubie jest nowsza wersja. Jeśli tak, pokaże okno z opisem zmian:
+
+- **Zaktualizuj teraz** pobiera nową wersję, sprawdza jej sumę kontrolną, podmienia plik programu i uruchamia go
+  ponownie – ustawienia i profile zostają. Stary plik jest usuwany automatycznie.
+- **Później** zamyka okno; do aktualizacji wrócisz linkiem **Dostępna nowa wersja…** w prawym dolnym rogu okna.
+
+W wersji ZIP okno prowadzi do strony pobierania. Ręcznie sprawdzisz aktualizacje w oknie **O programie** →
+**Sprawdź teraz**; tam też wyłączysz automatyczne sprawdzanie.
 
 ## Szybki start
 
@@ -48,8 +57,9 @@ Program sam sprawdza przy starcie, czy jest nowsza wersja – jeśli tak, w stop
 2. **Sprawdź podgląd** – kliknij plik na liście, aby zobaczyć obraz po prawej stronie.
 3. **Wybierz folder docelowy** – na dole okna, przycisk **Wybierz…**.
 4. Kliknij **Konwertuj**. Postęp widać na pasku i na ikonie programu na pasku zadań, a wynik każdego pliku –
-   w kolumnie **Status**.
-5. **Otwórz** wyniki przyciskiem przy folderze docelowym albo dwuklikiem na przekonwertowanym pliku.
+   w kolumnie **Status**. Na koniec pojawi się [podsumowanie](#podsumowanie-konwersji): ile plików się udało,
+   a które mają błędy i dlaczego.
+5. **Otwórz** wyniki przyciskiem **Otwórz folder docelowy** w podsumowaniu albo dwuklikiem na przekonwertowanym pliku.
 
 Domyślnie powstają obrazy PNG z jasnością i kontrastem zapisanymi w pliku przez aparat – to zwykle najlepszy wybór.
 Wszystkie ustawienia są zapamiętywane do następnego uruchomienia.
@@ -154,10 +164,19 @@ Po kliknięciu prawym przyciskiem pliku `.dcm`/`.dicom` lub folderu pojawią si�
 
 W Windows 11 polecenia są pod **„Pokaż więcej opcji”**. Jeśli przeniesiesz program w inne miejsce, włącz tę opcję ponownie.
 
-### Raport z konwersji
+### Podsumowanie konwersji
 
-Po każdej konwersji w folderze docelowym zapisuje się raport CSV (otwiera się w Excelu): co się udało, co nie
-i dlaczego. Link **Otwórz raport** pojawia się przy pasku postępu. Raport wyłączysz w karcie **Eksport** → **Opcje**.
+Po każdej konwersji pojawia się okno z liczbą plików **udanych** i **z błędami** (oraz anulowanych, jeśli przerwiesz
+konwersję), liczbą zapisanych obrazów i czasem trwania. Pliki, których nie udało się przekonwertować, są wypisane
+razem z przyczyną:
+
+- kliknięcie pliku pokazuje jego pełną ścieżkę i cały opis błędu, a dwuklik – plik w Eksploratorze,
+- **Kopiuj listę błędów** (`Ctrl+C`) kopiuje ścieżki i błędy do schowka, np. do wklejenia w e-mailu lub Excelu,
+- **Otwórz folder docelowy** otwiera zapisane obrazy.
+
+![Podsumowanie konwersji](docs/screenshots/podsumowanie.png)
+
+Raport CSV nadal można zapisać w [wierszu poleceń](#wiersz-poleceń) opcją `--report`.
 
 ### Lista plików
 
@@ -238,6 +257,7 @@ opcje, `2` – część plików się nie przekonwertowała. Pełny opis: `dicom-
 | Status „Plik nie zawiera obrazu” | To plik DICOM bez obrazu (np. raport, plan leczenia, `DICOMDIR`) – można go pominąć. |
 | Status „Nie można zdekodować obrazu” | Plik jest uszkodzony albo używa rzadkiego, niezgodnego ze standardem kodowania. |
 | Obraz jest prawie czarny lub biały | W podglądzie zmień **Jasność i kontrast** na **Pełny zakres jasności** albo przeciągnij obraz prawym przyciskiem. |
+| Aktualizacja się nie udała | Program musi mieć prawo zapisu w swoim folderze (np. nie `C:\Program Files`) – przenieś go np. na Pulpit albo pobierz nową wersję z [Releases](https://github.com/facior/DicomExporter/releases/latest). |
 | Nie ma powiadomienia po konwersji | Powiadomienia są wyłączone w ustawieniach Windows – przycisk programu na pasku zadań i tak zamiga. |
 | Brak poleceń w menu kontekstowym | W Windows 11 są pod „Pokaż więcej opcji”; po przeniesieniu programu włącz je ponownie w „O programie”. |
 | Chcę przywrócić ustawienia domyślne | Zamknij program i usuń plik `%APPDATA%\DicomExporter\settings.json`. |
@@ -247,7 +267,8 @@ Znalazłeś błąd lub masz pomysł? [Zgłoś go tutaj](https://github.com/facio
 ## Prywatność i zastrzeżenia
 
 - Pliki są przetwarzane **wyłącznie na Twoim komputerze** – program nie wysyła ich ani żadnych danych o nich do
-  internetu. Jedyne połączenie to sprawdzanie nowej wersji na GitHubie, które można wyłączyć w oknie „O programie”.
+  internetu. Jedyne połączenie to sprawdzanie nowej wersji na GitHubie (i jej pobranie, gdy klikniesz
+  **Zaktualizuj teraz**); sprawdzanie można wyłączyć w oknie „O programie”.
 - Zwykłe obrazy wynikowe nie zawierają danych DICOM, ale dane pacjenta mogą być **wpalone w obraz**, a szablony nazw
   lub nakładka „Dane pacjenta” mogą umieścić je w nazwach plików lub na obrazie.
 - Anonimizacja realizuje uproszczony podstawowy profil poufności DICOM (PS3.15, zał. E) – przed udostępnieniem
@@ -286,11 +307,11 @@ dicom_exporter/overlays.py     podziałka i opisy na obrazie
 dicom_exporter/naming.py       szablony nazw plików i folderów
 dicom_exporter/profiles.py     gotowe profile eksportu
 dicom_exporter/dicominfo.py    dane do listy, tagi, odczyt DICOMDIR
-dicom_exporter/report.py       raport CSV
+dicom_exporter/report.py       raport CSV (wiersz poleceń)
 dicom_exporter/gui.py          główne okno (preview.py, dialogs.py, widgets.py – elementy interfejsu)
 dicom_exporter/quick.py        szybka konwersja z menu kontekstowego
 dicom_exporter/shellmenu.py    polecenia w menu kontekstowym Eksploratora
-dicom_exporter/updates.py      sprawdzanie nowych wersji
+dicom_exporter/updates.py      sprawdzanie, pobieranie i instalowanie nowych wersji
 dicom_exporter/winshell.py     pasek zadań, powiadomienia, Eksplorator
 dicom_exporter/i18n.py         tłumaczenia (PL/EN)
 dicom_exporter/cli.py          wiersz poleceń

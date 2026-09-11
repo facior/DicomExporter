@@ -82,6 +82,10 @@ GLYPHS = {
     "play": "\uE768",
     "pause": "\uE769",
     "save": "\uE74E",
+    "success": "\uE930",
+    "warning": "\uE7BA",
+    "copy": "\uE8C8",
+    "download": "\uE896",
 }
 
 # Nazwane czcionki: (rozmiar w pikselach przy 100%, pogrubienie, podkreślenie)
@@ -90,6 +94,7 @@ FONT_SPECS = {
     "SunValleyBodyFont": (-14, False, False),
     "SunValleyBodyStrongFont": (-14, True, False),
     "SunValleySubtitleFont": (-20, True, False),
+    "DicomExporterStatFont": (-30, True, False),
     "DicomExporterLinkFont": (-14, False, True),
     "DicomExporterCaptionLinkFont": (-12, False, True),
 }

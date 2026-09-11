@@ -52,13 +52,20 @@ from .converter import (
     natural_key,
     output_stem,
 )
-from .dialogs import AboutDialog, DicomdirDialog
+from .dialogs import AboutDialog, DicomdirDialog, SummaryDialog, UpdateDialog
 from .dicominfo import FileInfo, find_dicomdir, format_size, is_dicomdir, read_dicomdir, read_file_info
 from .i18n import LANGUAGES, get_language, plural, set_language, t
 from .preview import PreviewWorker, ZoomCanvas
 from .profiles import BUILTIN_PROFILES, builtin_label
-from .report import write_report
-from .updates import Release, check_for_update
+from .updates import (
+    AFTER_UPDATE_FLAG,
+    Release,
+    UpdateError,
+    check_for_update,
+    is_newer,
+    latest_release,
+    remove_leftover,
+)
 from .widgets import (
     APP_TITLE,
     DND_FILES,
@@ -187,13 +194,14 @@ class App:
         self.results: list[FileResult] = []
         self.started_at = datetime.now()
         self.used_output_dir: Path | None = None
-        self.last_report: Path | None = None
         self.sort_column: str | None = None
         self.sort_reverse = False
         self.icon_widgets: dict[tk.Widget, tuple[str, str, int, int, str | None]] = {}
         self.setting_widgets: list[tk.Widget] = []
         self.export_sections: dict[str, ttk.Frame] = {}
         self.about_dialog: AboutDialog | None = None
+        self.update_dialog: UpdateDialog | None = None
+        self.update_prompted = ""
         self.drop_hover = False
         self.masks: list[tuple[float, float, float, float]] = []
         self.user_profiles: dict[str, dict] = {}
@@ -284,13 +292,13 @@ class App:
         self.fps_var = tk.IntVar(value=number("fps", 10, 1, 60))
         self.all_frames_var = tk.BooleanVar(value=bool(settings.get("all_frames", True)))
         self.overwrite_var = tk.BooleanVar(value=bool(settings.get("overwrite", False)))
-        self.report_var = tk.BooleanVar(value=bool(settings.get("report", True)))
         self.overlay_scale_var = tk.BooleanVar(value=bool(settings.get("overlay_scale", False)))
         self.overlay_info_var = tk.BooleanVar(value=bool(settings.get("overlay_info", False)))
         self.overlay_patient_var = tk.BooleanVar(value=bool(settings.get("overlay_patient", False)))
         self.anonymize_name_var = tk.StringVar(value=str(settings.get("anonymize_name") or "ANONIM"))
         self.keep_dates_var = tk.BooleanVar(value=bool(settings.get("anonymize_keep_dates", False)))
         self.check_updates_var = tk.BooleanVar(value=bool(settings.get("check_updates", True)))
+        self.update_prompted = str(settings.get("update_prompted") or "")
         self.output_var = tk.StringVar(value=settings.get("output_dir") or str(DEFAULT_OUTPUT))
         theme = settings.get("theme")
         self.dark_var = tk.BooleanVar(value=theme == "dark" if theme in ("dark", "light") else system_prefers_dark())
@@ -368,13 +376,13 @@ class App:
             "fps": _number(self.fps_var, 10),
             "all_frames": self.all_frames_var.get(),
             "overwrite": self.overwrite_var.get(),
-            "report": self.report_var.get(),
             "overlay_scale": self.overlay_scale_var.get(),
             "overlay_info": self.overlay_info_var.get(),
             "overlay_patient": self.overlay_patient_var.get(),
             "anonymize_name": self.anonymize_name_var.get(),
             "anonymize_keep_dates": self.keep_dates_var.get(),
             "check_updates": self.check_updates_var.get(),
+            "update_prompted": self.update_prompted,
             "masks": [list(mask) for mask in self.masks],
             "profile": self.profile_var.get(),
             "user_profiles": self.user_profiles,
@@ -538,7 +546,6 @@ class App:
         status_row = ttk.Frame(progress_box)
         status_row.pack(fill="x", pady=(px(6), 0))
         ttk.Label(status_row, textvariable=self.status_var, style="Caption.TLabel").pack(side="left")
-        self.report_link = link_label(status_row, t("open_report"), self.open_report, small=True)
         self.cancel_btn = self._icon_button(card, t("btn_cancel"), "cancel", self.cancel)
         self.cancel_btn.grid(row=2, column=2, padx=(px(16), 0))
         self.convert_btn = self._icon_button(
@@ -879,7 +886,6 @@ class App:
         frame, _ = section("options", t("options"))
         switch(frame, 1, t("switch_all_frames"), self.all_frames_var)
         switch(frame, 2, t("switch_overwrite"), self.overwrite_var)
-        switch(frame, 3, t("switch_report"), self.report_var)
 
     def _template_row(self, parent, row: int, variable: tk.StringVar, top: int = 0) -> tuple[ttk.Entry, ttk.Menubutton]:
         frame = ttk.Frame(parent)
@@ -910,7 +916,7 @@ class App:
             ttk.Label(footer, text="·", style="Caption.TLabel").pack(side="left", padx=px(8))
             link_label(footer, text, lambda url=target: webbrowser.open(url), small=True).pack(side="left")
         ttk.Label(footer, text=t("version", version=__version__), style="Caption.TLabel").pack(side="right")
-        self.update_link = link_label(footer, "", self._open_update, small=True)
+        self.update_link = link_label(footer, "", self.open_update_dialog, small=True)
         if self.available_release is not None:
             self._show_update(self.available_release)
 
@@ -992,7 +998,9 @@ class App:
                 elif kind == "done":
                     self._finish_conversion()
                 elif kind == "update":
-                    self._show_update(event[1])
+                    self._on_update_found(event[1])
+                elif kind == "update_check":
+                    self._on_update_check(event[1], event[2])
         except queue.Empty:
             pass
         self.root.after(50, self._process_events)
@@ -1026,6 +1034,10 @@ class App:
         style.configure("Caption.TLabel", font="SunValleyCaptionFont", foreground=palette["muted"])
         style.configure("Link.TLabel", font="SunValleyBodyFont", foreground=palette["accent"])
         style.configure("CaptionLink.TLabel", font="SunValleyCaptionFont", foreground=palette["accent"])
+        style.configure("Error.TLabel", font="SunValleyCaptionFont", foreground=palette["error"])
+        style.configure("StatOk.TLabel", font="DicomExporterStatFont", foreground=palette["success"])
+        style.configure("StatError.TLabel", font="DicomExporterStatFont", foreground=palette["error"])
+        style.configure("StatMuted.TLabel", font="DicomExporterStatFont", foreground=palette["muted"])
 
     def _apply_custom_colors(self) -> None:
         if not self._ui_ready:
@@ -1085,7 +1097,6 @@ class App:
         self._ui_ready = True
         self.side_tabs.select(tab_index)
         self.status_var.set(t("status_ready"))
-        self._show_report_link(self.last_report is not None)
         self._apply_theme(refresh_title_bar=False)
         selection = [iid for iid, row in self.rows.items() if row.key in selected]
         if selection:
@@ -1593,7 +1604,6 @@ class App:
         self._clear_preview()
         self.progress.configure(value=0)
         self.status_var.set(t("status_ready"))
-        self._show_report_link(False)
         self._update_controls()
 
     # ------------------------------------------------------------------ podgląd
@@ -1967,16 +1977,6 @@ class App:
         else:
             messagebox.showinfo(APP_TITLE, t("msg_output_missing"), parent=self.root)
 
-    def open_report(self) -> None:
-        if self.last_report is not None and self.last_report.exists():
-            open_path(self.last_report)
-
-    def _show_report_link(self, visible: bool) -> None:
-        if visible:
-            self.report_link.pack(side="left", padx=(self.px(12), 0))
-        else:
-            self.report_link.pack_forget()
-
     def _export_options(self) -> ConvertOptions:
         export = self.export_mode_var.get()
         fmt = self.format_var.get()
@@ -2043,8 +2043,6 @@ class App:
         self.results = []
         self.started_at = datetime.now()
         self.used_output_dir = output_dir
-        self.last_report = None
-        self._show_report_link(False)
         self.progress.configure(maximum=len(iids), value=0)
         self.status_var.set(t("status_converting", done=0, total=len(iids)))
         self.cancel_event.clear()
@@ -2096,12 +2094,6 @@ class App:
             summary += t("summary_errors", count=stats["error"])
         if cancelled:
             summary = t("status_cancelled_prefix", summary=summary)
-        if self.report_var.get() and self.results and self.used_output_dir is not None:
-            try:
-                self.last_report = write_report(self.results, self.used_output_dir, self.started_at)
-                self._show_report_link(True)
-            except OSError as exc:
-                summary += t("status_report_failed", error=exc)
         self.status_var.set(summary)
 
         if stats["error"]:
@@ -2115,6 +2107,16 @@ class App:
             flash_taskbar(self.root)
         self._apply_sort()
         self._update_controls()
+        if self.results:
+            SummaryDialog(
+                self,
+                self.results,
+                total=stats["total"],
+                images=len(self.output_paths),
+                elapsed=(datetime.now() - self.started_at).total_seconds(),
+                output_dir=self.used_output_dir,
+                cancelled=cancelled,
+            )
 
     def cancel(self) -> None:
         if self.converting:
@@ -2129,14 +2131,52 @@ class App:
         if release is not None:
             self.events.put(("update", release))
 
+    def check_updates_now(self) -> None:
+        """Ręczne sprawdzenie z okna „O programie” – w przeciwieństwie do startowego zgłasza też brak sieci."""
+
+        def worker() -> None:
+            try:
+                release, error = latest_release(), None
+            except UpdateError as exc:
+                release, error = None, str(exc)
+            self.events.put(("update_check", release, error))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_update_check(self, release: Release | None, error: str | None) -> None:
+        about = self.about_dialog if self.about_dialog is not None and self.about_dialog.window.winfo_exists() else None
+        if about is not None:
+            about.check_finished()
+        parent = about.window if about is not None else self.root
+        if error is not None:
+            messagebox.showerror(APP_TITLE, t("update_check_failed", error=error), parent=parent)
+        elif release is not None and is_newer(release.version):
+            self._show_update(release)
+            self.open_update_dialog()
+        else:
+            messagebox.showinfo(APP_TITLE, t("update_latest", version=__version__), parent=parent)
+
+    def _on_update_found(self, release: Release) -> None:
+        """Wynik sprawdzenia przy starcie: link w stopce, a o każdej nowej wersji jednorazowo okno aktualizacji."""
+        self._show_update(release)
+        if release.version != self.update_prompted and not self.converting and self.root.grab_current() is None:
+            self.update_prompted = release.version
+            self._save_settings()
+            self.open_update_dialog()
+
     def _show_update(self, release: Release) -> None:
         self.available_release = release
         self.update_link.configure(text=t("update_available", version=release.version))
         self.update_link.pack(side="right", padx=(0, self.px(16)))
 
-    def _open_update(self) -> None:
-        if self.available_release is not None:
-            webbrowser.open(self.available_release.url)
+    def open_update_dialog(self) -> None:
+        if self.available_release is None:
+            return
+        if self.update_dialog is not None and self.update_dialog.window.winfo_exists():
+            self.update_dialog.window.lift()
+            self.update_dialog.window.focus_set()
+            return
+        self.update_dialog = UpdateDialog(self, self.available_release)
 
     def show_about(self) -> None:
         if self.about_dialog is not None and self.about_dialog.window.winfo_exists():
@@ -2148,6 +2188,9 @@ class App:
     def on_close(self) -> None:
         if self.converting and not messagebox.askyesno(APP_TITLE, t("msg_close_converting"), parent=self.root):
             return
+        self.shutdown()
+
+    def shutdown(self) -> None:
         self._stop_playback()
         self.cancel_event.set()
         self._save_settings()
@@ -2157,9 +2200,16 @@ class App:
 
 
 def main() -> None:
+    args = sys.argv[1:]
+    updated = len(args) >= 2 and args[0] == AFTER_UPDATE_FLAG
+    if updated:  # start po aktualizacji: stary plik programu usuwamy, gdy tylko poprzedni proces się zakończy
+        threading.Thread(target=remove_leftover, args=(Path(args[1]),), daemon=True).start()
+        args = args[2:]
     enable_high_dpi()
     root, dnd_enabled = create_root()
     app = App(root, dnd_enabled)
-    if len(sys.argv) > 1:  # np. pliki upuszczone na run.bat
-        app.add_paths(sys.argv[1:])
+    if updated:
+        app.status_var.set(t("status_updated", version=__version__))
+    if args:  # np. pliki upuszczone na run.bat
+        app.add_paths(args)
     root.mainloop()

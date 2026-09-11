@@ -22,8 +22,12 @@ VERBS = (
 )
 
 
-def launcher() -> tuple[str, str]:
-    """(program, argumenty przed ścieżką): exe z PyInstallera albo pythonw z main.py przy uruchomieniu ze źródeł."""
+def launcher(program: Path | None = None) -> tuple[str, str]:
+    """(program, argumenty przed ścieżką): exe z PyInstallera albo pythonw z main.py przy uruchomieniu ze źródeł.
+
+    `program` wskazuje inny plik .exe – np. nową wersję po aktualizacji."""
+    if program is not None:
+        return str(program), ""
     if getattr(sys, "frozen", False):
         return sys.executable, ""
     python = Path(sys.executable)
@@ -32,9 +36,9 @@ def launcher() -> tuple[str, str]:
     return str(pythonw if pythonw.exists() else python), f'"{main}"'
 
 
-def command_line(flag: str = "") -> str:
-    program, prefix = launcher()
-    return " ".join(part for part in (f'"{program}"', prefix, flag, '"%1"') if part)
+def command_line(flag: str = "", program: Path | None = None) -> str:
+    executable, prefix = launcher(program)
+    return " ".join(part for part in (f'"{executable}"', prefix, flag, '"%1"') if part)
 
 
 def is_registered() -> bool:
@@ -51,17 +55,17 @@ def is_registered() -> bool:
     return value == command_line()
 
 
-def register() -> None:
+def register(program: Path | None = None) -> None:
     import winreg
 
-    program, _prefix = launcher()
+    executable, _prefix = launcher(program)
     for root in MENU_ROOTS:
         for verb, label, flag in VERBS:
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{root}\{verb}") as key:
                 winreg.SetValueEx(key, "", 0, winreg.REG_SZ, t(label))
-                winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, program)
+                winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, executable)
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{root}\{verb}\command") as key:
-                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, command_line(flag))
+                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, command_line(flag, program))
     _notify_shell()
 
 
