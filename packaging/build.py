@@ -56,6 +56,9 @@ def write_version_file() -> Path:
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):  # na serwerach CI wyjście nie jest konsolą (domyślnie cp1252 bez polskich znaków)
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Budowanie DICOM Exporter do dystrybucji")
     parser.add_argument("--expect-version", help="tag wydania (np. v1.2.0), który musi zgadzać się z wersją programu")
     args = parser.parse_args()
