@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from PIL import ImageTk
 
-from . import COPYRIGHT_YEAR, GITHUB_URL, __author__, __email__, __version__
+from . import COPYRIGHT_YEAR, GITHUB_URL, PROJECT_URL, __author__, __email__, __version__
 from . import shellmenu, updates
 from .about import capabilities, medical_note, privacy_note, shortcuts
 from .converter import FileResult, natural_key
@@ -142,6 +142,10 @@ class AboutDialog:
         ]
         if GITHUB_URL:
             rows.append(("GitHub", link_label(tab, GITHUB_URL.removeprefix("https://"), lambda: webbrowser.open(GITHUB_URL))))
+        if PROJECT_URL:
+            rows.append(
+                (t("about_project"), link_label(tab, PROJECT_URL.removeprefix("https://"), lambda: webbrowser.open(PROJECT_URL)))
+            )
         row = self._rows(tab, rows)
         updates_row = ttk.Frame(tab)
         updates_row.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(px(10), 0))

@@ -549,6 +549,7 @@ STRINGS: dict[str, tuple[str, str]] = {
     "tab_shortcuts": ("Skróty klawiszowe", "Keyboard shortcuts"),
     "about_author": ("Autor", "Author"),
     "about_email": ("E-mail", "E-mail"),
+    "about_project": ("Projekt", "Project"),
     "about_privacy": ("Prywatność", "Privacy"),
     "about_disclaimer": ("Zastrzeżenie", "Disclaimer"),
     "dicomdir_title": ("Płyta DICOM", "DICOM disc"),

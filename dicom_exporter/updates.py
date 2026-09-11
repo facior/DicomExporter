@@ -21,10 +21,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import __version__
+from . import PROJECT_URL, __version__
 from .i18n import t
 
-GITHUB_REPO = "facior/DicomExporter"
+GITHUB_REPO = PROJECT_URL.removeprefix("https://github.com/")
 LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 RELEASES_PAGE = f"https://github.com/{GITHUB_REPO}/releases"
 
