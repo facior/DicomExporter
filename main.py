@@ -6,6 +6,14 @@
 import sys
 
 if __name__ == "__main__":
+    try:
+        # Ekran startowy pojedynczego pliku .exe (PyInstaller) – zamykamy go, zanim wystartuje tkinter.
+        import pyi_splash
+
+        pyi_splash.close()
+    except ImportError:
+        pass
+
     if len(sys.argv) > 2 and sys.argv[1] == "--quick-png":
         from dicom_exporter.quick import quick_convert
 

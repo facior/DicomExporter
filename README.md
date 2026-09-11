@@ -57,15 +57,19 @@ Interfejs po polsku i angielsku.
 
 ## Pobieranie i instalacja
 
-Gotowe wersje są w zakładce [Releases](https://github.com/facior/DicomExporter/releases):
+Gotowe wersje są w zakładce [Releases](https://github.com/facior/DicomExporter/releases) – bez instalatora:
 
-- **`DicomExporter-X.Y.Z-setup.exe`** – instalator (bez uprawnień administratora); dodaje skrót w menu Start
-  i – opcjonalnie – polecenia w menu kontekstowym Eksploratora dla plików `.dcm`/`.dicom` i folderów:
-  „Otwórz w DICOM Exporter” oraz „Konwertuj do PNG (obok pliku)”,
-- **`DicomExporter-X.Y.Z-portable.zip`** – wersja przenośna: rozpakuj i uruchom `DicomExporter.exe`.
+- **`DicomExporter-X.Y.Z.exe`** – jeden plik: pobierz i uruchom. Przy każdym starcie program rozpakowuje się
+  na kilka sekund do folderu tymczasowego (widać wtedy ekran startowy),
+- **`DicomExporter-X.Y.Z-portable.zip`** – folder do rozpakowania: szybszy start oraz `dicom-exporter-cli.exe`
+  do wiersza poleceń (opcje opisane niżej).
 
-W folderze programu jest też `dicom-exporter-cli.exe` – wersja do wiersza poleceń (opcje opisane niżej).
-Przy uruchomieniu program sprawdza, czy na GitHubie jest nowsza wersja – można to wyłączyć w oknie „O programie”.
+Plik nie jest podpisany cyfrowo, więc Windows SmartScreen może wyświetlić ostrzeżenie – wybierz
+„Więcej informacji” → „Uruchom mimo to”.
+
+**Menu kontekstowe Eksploratora** („Otwórz w DICOM Exporter” i „Konwertuj do PNG (obok pliku)” dla plików
+`.dcm`/`.dicom` i folderów) włączysz w oknie „O programie” – wpisy trafiają tylko do rejestru bieżącego użytkownika
+i można je w każdej chwili wyłączyć. Tam też wyłączysz sprawdzanie nowych wersji przy uruchomieniu.
 
 ## Uruchomienie ze źródeł (Windows)
 
@@ -162,8 +166,9 @@ dicom_exporter/winshell.py     pasek zadań, powiadomienia, Eksplorator
 dicom_exporter/cli.py          wiersz poleceń
 dicom_exporter/quick.py        szybka konwersja do PNG z menu kontekstowego Eksploratora
 dicom_exporter/updates.py      sprawdzanie nowych wersji na GitHubie
+dicom_exporter/shellmenu.py    polecenia w menu kontekstowym Eksploratora (bez instalatora)
 cli_main.py                    start wersji konsolowej (dicom-exporter-cli.exe)
-packaging/                     budowanie .exe (PyInstaller), instalator (Inno Setup), ikona
+packaging/                     budowanie .exe (PyInstaller), ikona i ekran startowy
 .github/workflows/             testy i automatyczne wydania (GitHub Actions)
 tests/                         testy (pytest)
 ```
@@ -174,13 +179,12 @@ Testy: `.venv\Scripts\pip install pytest` i `.venv\Scripts\python -m pytest test
 
 ```bat
 .venv\Scripts\pip install pyinstaller
-.venv\Scripts\python packaging\build.py              :: dist\DicomExporter + wersja przenośna ZIP
-.venv\Scripts\python packaging\build.py --installer  :: dodatkowo instalator (wymaga Inno Setup 6)
+.venv\Scripts\python packaging\build.py     :: dist\DicomExporter-X.Y.Z.exe (jeden plik) i wersja przenośna ZIP
 ```
 
 Wydania tworzą się automatycznie na GitHubie (GitHub Actions): zmień `__version__` w `dicom_exporter/__init__.py`,
 zrób commit i wypchnij tag, np. `git tag v1.1.0` oraz `git push origin v1.1.0`. Workflow uruchomi testy, zbuduje
-instalator i wersję przenośną i dołączy je do wydania. Testy uruchamiają się też przy każdym pushu na `main`.
+plik `.exe` i wersję przenośną i dołączy je do wydania. Testy uruchamiają się też przy każdym pushu na `main`.
 
 ## Autor
 

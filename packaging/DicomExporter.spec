@@ -1,7 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""Budowa DICOM Exporter: okienkowy DicomExporter.exe i konsolowy dicom-exporter-cli.exe w jednym folderze.
+"""Budowa DICOM Exporter (uruchamiaj przez `python packaging/build.py`):
 
-Uruchamiaj przez `python packaging/build.py` (tworzy też plik z informacjami o wersji).
+- dist/DicomExporter-onefile.exe – jeden plik do uruchomienia bez instalacji (z ekranem startowym),
+- dist/DicomExporter/ – folder z DicomExporter.exe i konsolowym dicom-exporter-cli.exe (szybszy start).
 """
 
 from pathlib import Path
@@ -35,9 +36,34 @@ def without_test_data(toc):
 
 gui.datas = without_test_data(gui.datas)
 cli.datas = without_test_data(cli.datas)
+gui_pyz = PYZ(gui.pure)
 
+# --- Jeden plik .exe
+splash = Splash(
+    str(ROOT / "packaging" / "splash.png"),
+    binaries=gui.binaries,
+    datas=gui.datas,
+    text_pos=None,
+    minify_script=True,
+)
+EXE(
+    gui_pyz,
+    gui.scripts,
+    splash,
+    splash.binaries,
+    gui.binaries,
+    gui.datas,
+    [],
+    name="DicomExporter-onefile",
+    console=False,
+    icon=ICON,
+    version=VERSION_FILE,
+    upx=False,
+)
+
+# --- Folder (wersja przenośna ZIP)
 gui_exe = EXE(
-    PYZ(gui.pure),
+    gui_pyz,
     gui.scripts,
     [],
     exclude_binaries=True,

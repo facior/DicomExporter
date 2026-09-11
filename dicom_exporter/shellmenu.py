@@ -1,0 +1,88 @@
+"""Polecenia DICOM Exporter w menu kontekstowym Eksploratora – bez instalatora, tylko dla bieżącego użytkownika."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from .i18n import t
+
+IS_WINDOWS = sys.platform == "win32"
+
+# Pliki .dcm i .dicom oraz foldery (np. płyty z badaniami); wpisy w HKEY_CURRENT_USER nie wymagają administratora
+MENU_ROOTS = (
+    r"Software\Classes\SystemFileAssociations\.dcm\shell",
+    r"Software\Classes\SystemFileAssociations\.dicom\shell",
+    r"Software\Classes\Directory\shell",
+)
+# (nazwa polecenia, etykieta, dodatkowy argument)
+VERBS = (
+    ("DicomExporter.Open", "shell_open", ""),
+    ("DicomExporter.Convert", "shell_convert", "--quick-png"),
+)
+
+
+def launcher() -> tuple[str, str]:
+    """(program, argumenty przed ścieżką): exe z PyInstallera albo pythonw z main.py przy uruchomieniu ze źródeł."""
+    if getattr(sys, "frozen", False):
+        return sys.executable, ""
+    python = Path(sys.executable)
+    pythonw = python.with_name("pythonw.exe")
+    main = Path(__file__).resolve().parent.parent / "main.py"
+    return str(pythonw if pythonw.exists() else python), f'"{main}"'
+
+
+def command_line(flag: str = "") -> str:
+    program, prefix = launcher()
+    return " ".join(part for part in (f'"{program}"', prefix, flag, '"%1"') if part)
+
+
+def is_registered() -> bool:
+    """Czy polecenia są dodane i wskazują na bieżące położenie programu."""
+    if not IS_WINDOWS:
+        return False
+    import winreg
+
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, rf"{MENU_ROOTS[0]}\{VERBS[0][0]}\command") as key:
+            value, _kind = winreg.QueryValueEx(key, "")
+    except OSError:
+        return False
+    return value == command_line()
+
+
+def register() -> None:
+    import winreg
+
+    program, _prefix = launcher()
+    for root in MENU_ROOTS:
+        for verb, label, flag in VERBS:
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{root}\{verb}") as key:
+                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, t(label))
+                winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, program)
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{root}\{verb}\command") as key:
+                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, command_line(flag))
+    _notify_shell()
+
+
+def unregister() -> None:
+    import winreg
+
+    for root in MENU_ROOTS:
+        for verb, _label, _flag in VERBS:
+            for subkey in (rf"{root}\{verb}\command", rf"{root}\{verb}"):
+                try:
+                    winreg.DeleteKey(winreg.HKEY_CURRENT_USER, subkey)
+                except FileNotFoundError:
+                    pass
+    _notify_shell()
+
+
+def _notify_shell() -> None:
+    """Informuje Eksplorator o zmianie, żeby menu odświeżyło się bez ponownego logowania."""
+    try:
+        import ctypes
+
+        ctypes.windll.shell32.SHChangeNotify(0x08000000, 0, None, None)  # SHCNE_ASSOCCHANGED
+    except (AttributeError, OSError):
+        pass

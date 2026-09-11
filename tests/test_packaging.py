@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 from pydicom.data import get_testdata_file
 
-from dicom_exporter import __version__, updates
+from dicom_exporter import __version__, shellmenu, updates
 from dicom_exporter.converter import collect_inputs
 from dicom_exporter.quick import convert_in_place
 
@@ -36,6 +36,16 @@ def test_version_comparison():
     assert updates.is_newer("v1.10.0", "1.9.9")
     assert not updates.is_newer("1.0", "1.0.0")
     assert updates.parse_version("v2") == (2, 0, 0)
+
+
+def test_context_menu_command_for_source_and_exe(monkeypatch):
+    source_command = shellmenu.command_line("--quick-png")
+    assert "main.py" in source_command and source_command.endswith('--quick-png "%1"')
+
+    monkeypatch.setattr(shellmenu.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(shellmenu.sys, "executable", r"C:\Programy\DicomExporter.exe")
+    assert shellmenu.command_line() == r'"C:\Programy\DicomExporter.exe" "%1"'
+    assert shellmenu.command_line("--quick-png") == r'"C:\Programy\DicomExporter.exe" --quick-png "%1"'
 
 
 def test_quick_convert_saves_png_next_to_sources(tmp_path):

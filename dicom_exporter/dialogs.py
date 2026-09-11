@@ -6,12 +6,13 @@ import os
 import tkinter as tk
 import webbrowser
 from pathlib import Path
-from tkinter import ttk
+from tkinter import messagebox, ttk
 from typing import TYPE_CHECKING
 
 from PIL import ImageTk
 
 from . import COPYRIGHT_YEAR, GITHUB_URL, __author__, __email__, __version__
+from . import shellmenu
 from .about import capabilities, medical_note, privacy_note, shortcuts
 from .converter import natural_key
 from .dicominfo import DirPatient
@@ -112,6 +113,19 @@ class AboutDialog:
             command=self.app._save_settings,
         ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(px(10), 0))
         row += 1
+        if shellmenu.IS_WINDOWS:
+            self.context_menu_var = tk.BooleanVar(value=shellmenu.is_registered())
+            ttk.Checkbutton(
+                tab,
+                text=t("switch_context_menu"),
+                variable=self.context_menu_var,
+                style=style_name("Switch.TCheckbutton"),
+                command=self._toggle_context_menu,
+            ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(px(6), 0))
+            ttk.Label(tab, text=t("context_menu_hint"), style="Caption.TLabel", wraplength=self.wrap, justify="left").grid(
+                row=row + 1, column=0, columnspan=2, sticky="w", padx=(px(48), 0)
+            )
+            row += 2
         for title, text in ((t("about_privacy"), privacy_note()), (t("about_disclaimer"), medical_note())):
             ttk.Label(tab, text=title, style="Section.TLabel").grid(
                 row=row, column=0, columnspan=2, sticky="w", pady=(px(14), px(2))
@@ -120,6 +134,16 @@ class AboutDialog:
                 row=row + 1, column=0, columnspan=2, sticky="w"
             )
             row += 2
+
+    def _toggle_context_menu(self) -> None:
+        try:
+            if self.context_menu_var.get():
+                shellmenu.register()
+            else:
+                shellmenu.unregister()
+        except OSError as exc:
+            self.context_menu_var.set(shellmenu.is_registered())
+            messagebox.showerror(APP_TITLE, t("context_menu_error", error=exc), parent=self.window)
 
     def _features_tab(self, tab: ttk.Frame) -> None:
         self._rows(tab, capabilities())

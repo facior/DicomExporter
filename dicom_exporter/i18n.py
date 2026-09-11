@@ -456,6 +456,16 @@ STRINGS: dict[str, tuple[str, str]] = {
     ),
     "anonymize_name": ("Nazwa pacjenta w kopii", "Patient name in the copy"),
     "switch_keep_dates": ("Zachowaj daty badań", "Keep study dates"),
+    "shell_open": ("Otwórz w DICOM Exporter", "Open in DICOM Exporter"),
+    "shell_convert": ("Konwertuj do PNG (obok pliku)", "Convert to PNG (next to the file)"),
+    "switch_context_menu": ("Polecenia w menu kontekstowym Eksploratora", "Commands in the Explorer context menu"),
+    "context_menu_hint": (
+        "„Otwórz w DICOM Exporter” i „Konwertuj do PNG” dla plików .dcm/.dicom i folderów (w Windows 11 pod "
+        "„Pokaż więcej opcji”). Po przeniesieniu programu w inne miejsce włącz ponownie.",
+        "“Open in DICOM Exporter” and “Convert to PNG” for .dcm/.dicom files and folders (in Windows 11 under "
+        "“Show more options”). After moving the program, turn it on again.",
+    ),
+    "context_menu_error": ("Nie udało się zmienić menu kontekstowego:\n{error}", "Could not change the context menu:\n{error}"),
     "quick_title": ("Szybka konwersja do PNG", "Quick conversion to PNG"),
     "quick_done": ("Obrazy PNG zapisano obok plików źródłowych.", "PNG images were saved next to the source files."),
     "btn_show_files": ("Pokaż pliki", "Show files"),
