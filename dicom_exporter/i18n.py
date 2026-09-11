@@ -550,6 +550,75 @@ STRINGS: dict[str, tuple[str, str]] = {
     "about_author": ("Autor", "Author"),
     "about_email": ("E-mail", "E-mail"),
     "about_project": ("Projekt", "Project"),
+    "about_tour": ("Pokaż przewodnik po programie", "Show the program tour"),
+    # --- Przewodnik
+    "tour_step": ("Krok {current} z {total}", "Step {current} of {total}"),
+    "tour_next": ("Dalej", "Next"),
+    "tour_back": ("Wstecz", "Back"),
+    "tour_skip": ("Pomiń przewodnik", "Skip tour"),
+    "tour_start": ("Zaczynamy", "Let's start"),
+    "tour_finish": ("Zakończ", "Finish"),
+    "tour_welcome_title": ("Witaj w DICOM Exporter", "Welcome to DICOM Exporter"),
+    "tour_welcome_text": (
+        "W kilku krokach pokażę, jak zamienić badania DICOM na zwykłe obrazy, animacje i wideo. "
+        "Przewodnik możesz pominąć i uruchomić ponownie w każdej chwili w oknie „O programie” (F1).",
+        "In a few steps I'll show you how to turn DICOM studies into regular images, animations and videos. "
+        "You can skip the tour and start it again at any time from the “About” window (F1).",
+    ),
+    "tour_files_title": ("Dodaj pliki", "Add files"),
+    "tour_files_text": (
+        "Przeciągnij tutaj pliki lub całe foldery z badaniami albo kliknij, aby je wybrać. Program sam rozpozna "
+        "pliki DICOM – także te bez rozszerzenia – i pominie resztę.",
+        "Drag files or whole study folders here, or click to choose them. The program recognises DICOM files "
+        "on its own – including ones without an extension – and skips everything else.",
+    ),
+    "tour_sources_title": ("Foldery i płyty z badaniami", "Folders and study discs"),
+    "tour_sources_text": (
+        "Tymi przyciskami dodasz pliki albo cały folder. „Otwórz płytę” czyta spis z pliku DICOMDIR "
+        "i pozwala wybrać konkretnych pacjentów, badania i serie.",
+        "Use these buttons to add files or a whole folder. “Open disc” reads the DICOMDIR index "
+        "and lets you pick specific patients, studies and series.",
+    ),
+    "tour_preview_title": ("Podgląd", "Preview"),
+    "tour_preview_text": (
+        "Kliknij plik na liście, aby zobaczyć obraz. Kółko myszy powiększa, strzałki ← → przełączają "
+        "obrazy serii, a Spacja odtwarza całą serię.",
+        "Click a file in the list to see the image. The mouse wheel zooms, the ← → arrows switch "
+        "images in a series and Space plays the whole series.",
+    ),
+    "tour_contrast_title": ("Jasność i kontrast", "Brightness and contrast"),
+    "tour_contrast_text": (
+        "Zwykle najlepiej wygląda okno zapisane w pliku. Dla tomografii są gotowe presety (płuca, kości…). "
+        "Szybciej: przeciągnij obraz w podglądzie prawym przyciskiem myszy.",
+        "The window stored in the file usually looks best. CT presets (lung, bone…) are ready to use. "
+        "Quicker: drag the preview image with the right mouse button.",
+    ),
+    "tour_export_title": ("Ustawienia eksportu", "Export settings"),
+    "tour_export_text": (
+        "Wybierz gotowy profil albo format i tryb: osobne obrazy, GIF, MP4, kolaż lub anonimizowane kopie DICOM. "
+        "Niżej są rozmiar, nakładki i nazwy plików. Ustawienia są zapamiętywane.",
+        "Pick a ready-made profile or choose the format and mode: separate images, GIF, MP4, contact sheet or "
+        "anonymized DICOM copies. Size, overlays and file names are further down. Settings are remembered.",
+    ),
+    "tour_output_title": ("Folder docelowy", "Output folder"),
+    "tour_output_text": (
+        "Tu trafią przekonwertowane pliki. „Wybierz…” zmienia folder, a „Otwórz” pokazuje go w Eksploratorze.",
+        "Converted files go here. “Browse…” changes the folder and “Open” shows it in Explorer.",
+    ),
+    "tour_header_title": ("Język, motyw i pomoc", "Language, theme and help"),
+    "tour_header_text": (
+        "Zmień język albo włącz ciemny motyw. W oknie „O programie” (F1) znajdziesz skróty klawiszowe, "
+        "aktualizacje i ten przewodnik.",
+        "Change the language or turn on the dark theme. The “About” window (F1) has keyboard shortcuts, "
+        "updates and this tour.",
+    ),
+    "tour_convert_title": ("Konwertuj", "Convert"),
+    "tour_convert_text": (
+        "Gdy wszystko jest gotowe, kliknij „Konwertuj”. Postęp zobaczysz na pasku, a na koniec podsumowanie: "
+        "ile plików się udało i które mają błędy.",
+        "When everything is ready, click “Convert”. You'll see the progress bar and, at the end, a summary "
+        "of which files succeeded and which failed.",
+    ),
     "about_privacy": ("Prywatność", "Privacy"),
     "about_disclaimer": ("Zastrzeżenie", "Disclaimer"),
     "dicomdir_title": ("Płyta DICOM", "DICOM disc"),

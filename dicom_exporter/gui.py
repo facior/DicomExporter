@@ -57,6 +57,7 @@ from .dicominfo import FileInfo, find_dicomdir, format_size, is_dicomdir, read_d
 from .i18n import LANGUAGES, get_language, plural, set_language, t
 from .preview import PreviewWorker, ZoomCanvas
 from .profiles import BUILTIN_PROFILES, builtin_label
+from .tour import Tour
 from .updates import (
     AFTER_UPDATE_FLAG,
     Release,
@@ -204,6 +205,8 @@ class App:
         self.about_dialog: AboutDialog | None = None
         self.update_dialog: UpdateDialog | None = None
         self.update_prompted = ""
+        self.tour: Tour | None = None
+        self.tour_done = True
         self.drop_hover = False
         self.masks: list[tuple[float, float, float, float]] = []
         self.user_profiles: dict[str, dict] = {}
@@ -254,6 +257,8 @@ class App:
         self.root.after(150, lambda: set_title_bar_theme(self.root, self.dark_var.get(), refresh=True))
         if self.check_updates_var.get():
             threading.Thread(target=self._check_updates_worker, daemon=True).start()
+        if not self.tour_done:
+            self.root.after(900, self._start_first_tour)
 
     # ------------------------------------------------------------------ zmienne i ustawienia
 
@@ -303,6 +308,8 @@ class App:
         self.keep_dates_var = tk.BooleanVar(value=bool(settings.get("anonymize_keep_dates", False)))
         self.check_updates_var = tk.BooleanVar(value=bool(settings.get("check_updates", True)))
         self.update_prompted = str(settings.get("update_prompted") or "")
+        # Przewodnik startuje sam tylko u nowych użytkowników (bez zapisanych ustawień), nie po aktualizacji.
+        self.tour_done = bool(settings.get("tour_done", bool(settings)))
         self.output_var = tk.StringVar(value=settings.get("output_dir") or str(DEFAULT_OUTPUT))
         theme = settings.get("theme")
         self.dark_var = tk.BooleanVar(value=theme == "dark" if theme in ("dark", "light") else system_prefers_dark())
@@ -387,6 +394,7 @@ class App:
             "anonymize_keep_dates": self.keep_dates_var.get(),
             "check_updates": self.check_updates_var.get(),
             "update_prompted": self.update_prompted,
+            "tour_done": self.tour_done,
             "masks": [list(mask) for mask in self.masks],
             "profile": self.profile_var.get(),
             "user_profiles": self.user_profiles,
@@ -464,15 +472,18 @@ class App:
         ttk.Label(titles, text=APP_TITLE, style="Title.TLabel").pack(anchor="w")
         ttk.Label(titles, text=t("app_subtitle"), style="Caption.TLabel").pack(anchor="w")
 
+        self.theme_switch: ttk.Checkbutton | None = None
         if sv_ttk is not None:
-            ttk.Checkbutton(
+            self.theme_switch = ttk.Checkbutton(
                 header, text=t("theme_dark"), style="Switch.TCheckbutton", variable=self.dark_var, command=self._toggle_theme
-            ).pack(side="right")
+            )
+            self.theme_switch.pack(side="right")
         self.about_btn = self._icon_button(header, t("btn_about"), "info", self.show_about, style="Toolbutton")
         self.about_btn.pack(side="right", padx=(0, px(20)))
 
         language = ttk.Frame(header)
         language.pack(side="right", padx=(0, px(16)))
+        self.language_frame = language
         language_icon = ttk.Label(language)
         language_icon.pack(side="left", padx=(0, px(6)))
         self.icon_widgets[language_icon] = ("language", "muted", 0, 16, None)
@@ -613,6 +624,7 @@ class App:
 
         contrast = ttk.Frame(tab)
         contrast.grid(row=6, column=0, sticky="ew")
+        self.contrast_frame = contrast
         contrast.columnconfigure(1, weight=1)
         head = ttk.Frame(contrast)
         head.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, px(6)))
@@ -2189,7 +2201,12 @@ class App:
     def _on_update_found(self, release: Release) -> None:
         """Wynik sprawdzenia przy starcie: link w stopce, a o każdej nowej wersji jednorazowo okno aktualizacji."""
         self._show_update(release)
-        if release.version != self.update_prompted and not self.converting and self.root.grab_current() is None:
+        if (
+            release.version != self.update_prompted
+            and not self.converting
+            and self.tour is None
+            and self.root.grab_current() is None
+        ):
             self.update_prompted = release.version
             self._save_settings()
             self.open_update_dialog()
@@ -2208,7 +2225,36 @@ class App:
             return
         self.update_dialog = UpdateDialog(self, self.available_release)
 
+    def start_tour(self) -> None:
+        if self.tour is not None or self.converting or self.root.state() == "iconic":
+            return
+        self.tour = Tour(self, self._on_tour_finished)
+        self.tour.start()
+
+    def _start_first_tour(self, attempts: int = 25) -> None:
+        """Przewodnik przy pierwszym uruchomieniu – gdy okno jest widoczne i nic innego nie jest otwarte."""
+        if self.tour_done or self.tour is not None:
+            return
+        busy = (
+            not self.root.winfo_viewable()
+            or self.root.grab_current() is not None
+            or self.converting
+            or bool(self.scan_counts)
+        )
+        if not busy:
+            self.start_tour()
+        elif attempts > 0:
+            self.root.after(400, lambda: self._start_first_tour(attempts - 1))
+
+    def _on_tour_finished(self, completed: bool) -> None:
+        self.tour = None
+        if not self.tour_done:  # pominięty też się liczy – przewodnik nie wraca sam przy kolejnym starcie
+            self.tour_done = True
+            self._save_settings()
+
     def show_about(self) -> None:
+        if self.tour is not None:
+            return
         if self.about_dialog is not None and self.about_dialog.window.winfo_exists():
             self.about_dialog.window.lift()
             self.about_dialog.window.focus_set()

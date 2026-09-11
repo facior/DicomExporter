@@ -147,6 +147,8 @@ class AboutDialog:
                 (t("about_project"), link_label(tab, PROJECT_URL.removeprefix("https://"), lambda: webbrowser.open(PROJECT_URL)))
             )
         row = self._rows(tab, rows)
+        link_label(tab, t("about_tour"), self._start_tour).grid(row=row, column=0, columnspan=2, sticky="w", pady=(px(10), 0))
+        row += 1
         updates_row = ttk.Frame(tab)
         updates_row.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(px(10), 0))
         ttk.Checkbutton(
@@ -180,6 +182,10 @@ class AboutDialog:
                 row=row + 1, column=0, columnspan=2, sticky="w"
             )
             row += 2
+
+    def _start_tour(self) -> None:
+        self.close()
+        self.app.root.after(200, self.app.start_tour)  # po zamknięciu okna, żeby nie trafiło do obrazu przewodnika
 
     def _check_now(self) -> None:
         if self.check_link is None or str(self.check_link.cget("text")) == t("update_checking"):

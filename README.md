@@ -64,6 +64,12 @@ W wersji ZIP okno prowadzi do strony pobierania. Ręcznie sprawdzisz aktualizacj
 Domyślnie powstają obrazy PNG z jasnością i kontrastem zapisanymi w pliku przez aparat – to zwykle najlepszy wybór.
 Wszystkie ustawienia są zapamiętywane do następnego uruchomienia.
 
+Przy pierwszym uruchomieniu program pokaże krótki **przewodnik**: przyciemni okno i strzałkami wskaże najważniejsze
+elementy wraz z opisem (`←` `→` lub `Enter` przełączają kroki, `Esc` zamyka). Wrócisz do niego w każdej chwili:
+**O programie** → **Pokaż przewodnik po programie**.
+
+![Przewodnik po programie](docs/screenshots/przewodnik.png)
+
 ## Jak to zrobić?
 
 ### Płyta z badaniem (DICOMDIR)
