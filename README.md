@@ -293,9 +293,10 @@ python -m venv .venv
 .venv\Scripts\python packaging\build.py             :: dist\DicomExporter-X.Y.Z.exe i wersja ZIP
 ```
 
-**Wydanie:** zmień `__version__` w `dicom_exporter/__init__.py`, zrób commit i wypchnij tag, np.
-`git tag v1.1.0` oraz `git push origin main v1.1.0`. GitHub Actions uruchomi testy, zbuduje `.exe` i ZIP
-i opublikuje wydanie. Testy uruchamiają się też przy każdym pushu na `main`.
+**Wydanie:** zmień `__version__` w `dicom_exporter/__init__.py` i opis zmian w `packaging/release-notes.md`
+(użytkownicy zobaczą go w oknie aktualizacji), zrób commit i wypchnij tag, np. `git tag v1.2.0` oraz
+`git push origin main v1.2.0`. GitHub Actions uruchomi testy, zbuduje `.exe` i ZIP i opublikuje wydanie – programy
+w wersji `.exe` zaproponują aktualizację przy najbliższym uruchomieniu. Testy uruchamiają się też przy każdym pushu na `main`.
 
 **Struktura projektu**
 

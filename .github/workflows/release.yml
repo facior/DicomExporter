@@ -1,6 +1,7 @@
 name: Wydanie
 
-# Nowe wydanie: zmień __version__ w dicom_exporter/__init__.py, zrób commit, a potem:
+# Nowe wydanie: zmień __version__ w dicom_exporter/__init__.py i opis w packaging/release-notes.md
+# (widać go w oknie aktualizacji programu), zrób commit, a potem:
 #   git tag v1.2.0 && git push origin v1.2.0
 on:
   push:
@@ -30,4 +31,5 @@ jobs:
           files: |
             dist/DicomExporter-*.exe
             dist/DicomExporter-*-portable.zip
+          body_path: packaging/release-notes.md
           generate_release_notes: true

@@ -74,6 +74,12 @@ def test_version_comparison():
     assert updates.parse_version("v2") == (2, 0, 0)
 
 
+def test_release_notes_file_describes_current_version():
+    notes = (Path(dicom_exporter.__file__).parent.parent / "packaging" / "release-notes.md").read_text(encoding="utf-8")
+    assert __version__ in notes, "zaktualizuj packaging/release-notes.md przed wydaniem"
+    assert updates.release_notes_text(notes)
+
+
 def test_release_notes_are_shown_as_plain_text():
     body = (
         "<!-- komentarz -->\n## Co nowego\n* Okno podsumowania **po konwersji**\n- [Opis](https://example)\n\n"
