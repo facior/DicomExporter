@@ -1,0 +1,14 @@
+pydicom>=3.0
+numpy>=1.26
+pillow>=10.1
+# Dekodery skompresowanych plików DICOM (JPEG, JPEG-LS, JPEG 2000, RLE)
+pylibjpeg>=2.0
+pylibjpeg-libjpeg>=2.1
+pylibjpeg-openjpeg>=2.3
+pylibjpeg-rle>=2.0
+# Eksport serii do wideo MP4 (zawiera koder ffmpeg)
+imageio-ffmpeg>=0.5
+# Nowoczesny motyw okna (Sun Valley, jasny i ciemny)
+sv-ttk>=2.6
+# Przeciąganie plików do okna (opcjonalne - bez niego aplikacja też działa)
+tkinterdnd2>=0.4

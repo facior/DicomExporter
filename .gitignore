@@ -1,0 +1,16 @@
+# Środowisko i pamięć podręczna Pythona
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Wyniki budowania (PyInstaller, instalator)
+build/
+dist/
+installer/Output/
+
+# Pliki systemowe i edytorów
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
