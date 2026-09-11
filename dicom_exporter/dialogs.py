@@ -104,6 +104,14 @@ class AboutDialog:
         if GITHUB_URL:
             rows.append(("GitHub", link_label(tab, GITHUB_URL.removeprefix("https://"), lambda: webbrowser.open(GITHUB_URL))))
         row = self._rows(tab, rows)
+        ttk.Checkbutton(
+            tab,
+            text=t("switch_check_updates"),
+            variable=self.app.check_updates_var,
+            style=style_name("Switch.TCheckbutton"),
+            command=self.app._save_settings,
+        ).grid(row=row, column=0, columnspan=2, sticky="w", pady=(px(10), 0))
+        row += 1
         for title, text in ((t("about_privacy"), privacy_note()), (t("about_disclaimer"), medical_note())):
             ttk.Label(tab, text=title, style="Section.TLabel").grid(
                 row=row, column=0, columnspan=2, sticky="w", pady=(px(14), px(2))

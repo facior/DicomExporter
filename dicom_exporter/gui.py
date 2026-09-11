@@ -58,6 +58,7 @@ from .i18n import LANGUAGES, get_language, plural, set_language, t
 from .preview import PreviewWorker, ZoomCanvas
 from .profiles import BUILTIN_PROFILES, builtin_label
 from .report import write_report
+from .updates import Release, check_for_update
 from .widgets import (
     APP_TITLE,
     DND_FILES,
@@ -80,6 +81,7 @@ from .widgets import (
     style_name,
     sv_ttk,
     system_prefers_dark,
+    work_area,
 )
 from .winshell import TaskbarProgress, TrayNotifier, flash_taskbar, open_path, reveal_in_explorer
 
@@ -203,6 +205,7 @@ class App:
         self._keep_view = False
         self._applying_profile = False
         self._window_drag_origin: tuple[float, float, float] | None = None
+        self.available_release: Release | None = None
 
         self.preview_worker = PreviewWorker(self.events.put)
         self.preview_worker.start()
@@ -237,6 +240,8 @@ class App:
         self._apply_theme(refresh_title_bar=False)
         self.root.after(50, self._process_events)
         self.root.after(150, lambda: set_title_bar_theme(self.root, self.dark_var.get(), refresh=True))
+        if self.check_updates_var.get():
+            threading.Thread(target=self._check_updates_worker, daemon=True).start()
 
     # ------------------------------------------------------------------ zmienne i ustawienia
 
@@ -285,6 +290,7 @@ class App:
         self.overlay_patient_var = tk.BooleanVar(value=bool(settings.get("overlay_patient", False)))
         self.anonymize_name_var = tk.StringVar(value=str(settings.get("anonymize_name") or "ANONIM"))
         self.keep_dates_var = tk.BooleanVar(value=bool(settings.get("anonymize_keep_dates", False)))
+        self.check_updates_var = tk.BooleanVar(value=bool(settings.get("check_updates", True)))
         self.output_var = tk.StringVar(value=settings.get("output_dir") or str(DEFAULT_OUTPUT))
         theme = settings.get("theme")
         self.dark_var = tk.BooleanVar(value=theme == "dark" if theme in ("dark", "light") else system_prefers_dark())
@@ -368,6 +374,7 @@ class App:
             "overlay_patient": self.overlay_patient_var.get(),
             "anonymize_name": self.anonymize_name_var.get(),
             "anonymize_keep_dates": self.keep_dates_var.get(),
+            "check_updates": self.check_updates_var.get(),
             "masks": [list(mask) for mask in self.masks],
             "profile": self.profile_var.get(),
             "user_profiles": self.user_profiles,
@@ -384,10 +391,15 @@ class App:
     def _configure_root(self) -> None:
         root = self.root
         root.title(APP_TITLE)
-        width = min(self.px(1360), root.winfo_screenwidth() - 40)
-        height = min(self.px(900), root.winfo_screenheight() - 80)
-        root.geometry(f"{width}x{height}")
-        root.minsize(min(self.px(1120), width), min(self.px(720), height))
+        # Okno mieści się w obszarze roboczym (bez paska zadań) i startuje wyśrodkowane;
+        # wysokość nie obejmuje paska tytułu, dlatego zostawiamy na niego zapas.
+        left, top, right, bottom = work_area(root)
+        width = min(self.px(1360), right - left - self.px(16))
+        height = min(self.px(900), bottom - top - self.px(48))
+        x = left + (right - left - width) // 2
+        y = top + max(0, (bottom - top - height - self.px(32)) // 2)
+        root.geometry(f"{width}x{height}+{x}+{y}")
+        root.minsize(min(self.px(1120), width), min(self.px(700), height))
         # Kółko myszy nad listą rozwijaną nie zmienia wartości - przewija panel ustawień.
         for widget_class in ("TCombobox", "TSpinbox"):
             root.bind_class(widget_class, "<MouseWheel>", "")
@@ -898,6 +910,9 @@ class App:
             ttk.Label(footer, text="·", style="Caption.TLabel").pack(side="left", padx=px(8))
             link_label(footer, text, lambda url=target: webbrowser.open(url), small=True).pack(side="left")
         ttk.Label(footer, text=t("version", version=__version__), style="Caption.TLabel").pack(side="right")
+        self.update_link = link_label(footer, "", self._open_update, small=True)
+        if self.available_release is not None:
+            self._show_update(self.available_release)
 
     # ------------------------------------------------------------------ zdarzenia
 
@@ -976,6 +991,8 @@ class App:
                     messagebox.showerror(APP_TITLE, t("msg_fatal", error=event[1]), parent=self.root)
                 elif kind == "done":
                     self._finish_conversion()
+                elif kind == "update":
+                    self._show_update(event[1])
         except queue.Empty:
             pass
         self.root.after(50, self._process_events)
@@ -2106,6 +2123,20 @@ class App:
             self._update_controls()
 
     # ------------------------------------------------------------------ okna
+
+    def _check_updates_worker(self) -> None:
+        release = check_for_update()
+        if release is not None:
+            self.events.put(("update", release))
+
+    def _show_update(self, release: Release) -> None:
+        self.available_release = release
+        self.update_link.configure(text=t("update_available", version=release.version))
+        self.update_link.pack(side="right", padx=(0, self.px(16)))
+
+    def _open_update(self) -> None:
+        if self.available_release is not None:
+            webbrowser.open(self.available_release.url)
 
     def show_about(self) -> None:
         if self.about_dialog is not None and self.about_dialog.window.winfo_exists():

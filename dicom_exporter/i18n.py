@@ -220,10 +220,12 @@ STRINGS: dict[str, tuple[str, str]] = {
     "sc_right_drag_key": ("Prawy przycisk + przeciąganie", "Right button + drag"),
     "sc_window_drag": ("Jasność (w pionie) i kontrast (w poziomie)", "Brightness (vertical) and contrast (horizontal)"),
     "privacy_note": (
-        "Pliki są przetwarzane wyłącznie na tym komputerze – program niczego nie wysyła do internetu. "
+        "Pliki są przetwarzane wyłącznie na tym komputerze – program nie wysyła ich ani żadnych danych o nich "
+        "do internetu (jedyne połączenie to opcjonalne sprawdzanie aktualizacji na GitHubie). "
         "Zapisane obrazy nie zawierają metadanych DICOM, ale dane pacjenta mogą być wpalone w sam obraz "
         "(np. napisy na zdjęciach USG), a szablony nazw mogą je umieścić w nazwach plików.",
-        "Files are processed only on this computer – nothing is sent to the internet. "
+        "Files are processed only on this computer – neither they nor any data about them is sent to the internet "
+        "(the only connection is the optional update check on GitHub). "
         "Saved images contain no DICOM metadata, but patient data may be burned into the image itself "
         "(e.g. ultrasound annotations) and name templates can put it into file names.",
     ),
@@ -454,6 +456,14 @@ STRINGS: dict[str, tuple[str, str]] = {
     ),
     "anonymize_name": ("Nazwa pacjenta w kopii", "Patient name in the copy"),
     "switch_keep_dates": ("Zachowaj daty badań", "Keep study dates"),
+    "quick_title": ("Szybka konwersja do PNG", "Quick conversion to PNG"),
+    "quick_done": ("Obrazy PNG zapisano obok plików źródłowych.", "PNG images were saved next to the source files."),
+    "btn_show_files": ("Pokaż pliki", "Show files"),
+    "update_available": ("Dostępna nowa wersja {version} – pobierz", "New version {version} available – download"),
+    "switch_check_updates": (
+        "Sprawdzaj aktualizacje przy uruchomieniu (połączenie z GitHubem)",
+        "Check for updates at startup (connects to GitHub)",
+    ),
     # --- Okna dialogowe
     "about_title": ("O programie {app}", "About {app}"),
     "about_description": (

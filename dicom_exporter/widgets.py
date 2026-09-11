@@ -385,6 +385,21 @@ class Choice:
             pass
 
 
+def work_area(root: tk.Misc) -> tuple[int, int, int, int]:
+    """Obszar roboczy ekranu bez paska zadań: (lewo, góra, prawo, dół) w pikselach."""
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            rect = wintypes.RECT()
+            if ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(rect), 0):  # SPI_GETWORKAREA
+                return rect.left, rect.top, rect.right, rect.bottom
+        except (AttributeError, OSError):
+            pass
+    return 0, 0, root.winfo_screenwidth(), root.winfo_screenheight()
+
+
 def enable_high_dpi() -> None:
     if sys.platform != "win32":
         return

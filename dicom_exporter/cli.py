@@ -172,6 +172,9 @@ def _options(parser: argparse.ArgumentParser, args: argparse.Namespace) -> Conve
 
 
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):  # przekierowane wyjście zawsze w UTF-8 (polskie znaki w plikach i potokach)
+        if stream is not None and hasattr(stream, "reconfigure") and not stream.isatty():
+            stream.reconfigure(encoding="utf-8", errors="replace")
     argv = list(sys.argv[1:] if argv is None else argv)
     if "--lang" in argv[:-1]:  # język musi być znany przed zbudowaniem opisów opcji
         set_language(argv[argv.index("--lang") + 1])

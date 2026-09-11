@@ -1,0 +1,35 @@
+name: Wydanie
+
+# Nowe wydanie: zmień __version__ w dicom_exporter/__init__.py, zrób commit, a potem:
+#   git tag v1.2.0 && git push origin v1.2.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Instalacja zależności
+        run: python -m pip install -r requirements.txt pytest pyinstaller
+      - name: Testy
+        run: python -m pytest -q tests
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Budowanie programu i instalatora
+        run: python packaging/build.py --installer --expect-version "${{ github.ref_name }}"
+      - name: Publikacja wydania
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/DicomExporter-*-setup.exe
+            dist/DicomExporter-*-portable.zip
+          generate_release_notes: true

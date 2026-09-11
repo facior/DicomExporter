@@ -55,7 +55,19 @@ Interfejs po polsku i angielsku.
 - motyw jasny/ciemny, język polski/angielski (zmiana bez utraty listy plików), zapamiętywanie ustawień,
 - równoległa konwersja w kilku wątkach, anulowanie, błędny plik nie przerywa partii.
 
-## Uruchomienie (Windows)
+## Pobieranie i instalacja
+
+Gotowe wersje są w zakładce [Releases](https://github.com/facior/DicomExporter/releases):
+
+- **`DicomExporter-X.Y.Z-setup.exe`** – instalator (bez uprawnień administratora); dodaje skrót w menu Start
+  i – opcjonalnie – polecenia w menu kontekstowym Eksploratora dla plików `.dcm`/`.dicom` i folderów:
+  „Otwórz w DICOM Exporter” oraz „Konwertuj do PNG (obok pliku)”,
+- **`DicomExporter-X.Y.Z-portable.zip`** – wersja przenośna: rozpakuj i uruchom `DicomExporter.exe`.
+
+W folderze programu jest też `dicom-exporter-cli.exe` – wersja do wiersza poleceń (opcje opisane niżej).
+Przy uruchomieniu program sprawdza, czy na GitHubie jest nowsza wersja – można to wyłączyć w oknie „O programie”.
+
+## Uruchomienie ze źródeł (Windows)
 
 Wymagany Python 3.10 lub nowszy. Kliknij dwukrotnie **`run.bat`** – przy pierwszym uruchomieniu skrypt utworzy
 środowisko `.venv` i zainstaluje zależności. Pliki lub foldery można też upuścić bezpośrednio na `run.bat`.
@@ -148,10 +160,27 @@ dicom_exporter/dialogs.py      okna „O programie” i wyboru z płyty
 dicom_exporter/widgets.py      motyw, ikony i pomocnicze widżety
 dicom_exporter/winshell.py     pasek zadań, powiadomienia, Eksplorator
 dicom_exporter/cli.py          wiersz poleceń
+dicom_exporter/quick.py        szybka konwersja do PNG z menu kontekstowego Eksploratora
+dicom_exporter/updates.py      sprawdzanie nowych wersji na GitHubie
+cli_main.py                    start wersji konsolowej (dicom-exporter-cli.exe)
+packaging/                     budowanie .exe (PyInstaller), instalator (Inno Setup), ikona
+.github/workflows/             testy i automatyczne wydania (GitHub Actions)
 tests/                         testy (pytest)
 ```
 
 Testy: `.venv\Scripts\pip install pytest` i `.venv\Scripts\python -m pytest tests`.
+
+## Budowanie i wydania
+
+```bat
+.venv\Scripts\pip install pyinstaller
+.venv\Scripts\python packaging\build.py              :: dist\DicomExporter + wersja przenośna ZIP
+.venv\Scripts\python packaging\build.py --installer  :: dodatkowo instalator (wymaga Inno Setup 6)
+```
+
+Wydania tworzą się automatycznie na GitHubie (GitHub Actions): zmień `__version__` w `dicom_exporter/__init__.py`,
+zrób commit i wypchnij tag, np. `git tag v1.1.0` oraz `git push origin v1.1.0`. Workflow uruchomi testy, zbuduje
+instalator i wersję przenośną i dołączy je do wydania. Testy uruchamiają się też przy każdym pushu na `main`.
 
 ## Autor
 
